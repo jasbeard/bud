@@ -3,19 +3,20 @@
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
+import { ModeToggle } from "@/components/mode-toggle";
 export default function Home() {
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: new Date(2025, 5, 12),
-    to: new Date(2025, 6, 15),
-  });
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
   return (
-    <Calendar
-      mode="range"
-      defaultMonth={dateRange?.from}
-      selected={dateRange}
-      onSelect={setDateRange}
-      numberOfMonths={2}
-      className="rounded-lg border shadow-sm"
-    />
+    <>
+      <ModeToggle />
+      <Calendar
+        mode="range"
+        // defaultMonth={dateRange?.from}
+        selected={dateRange}
+        onSelect={setDateRange}
+        numberOfMonths={2}
+        className="rounded-lg border shadow-sm"
+      />
+    </>
   );
 }
