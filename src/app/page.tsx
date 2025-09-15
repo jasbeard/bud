@@ -2,21 +2,39 @@
 
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
-import { Calendar } from "@/components/ui/calendar";
 import { ModeToggle } from "@/components/mode-toggle";
+import { CycleSelect } from "@/components/cycle-select";
+
 export default function Home() {
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>();
+  const [maxCycles, setMaxCycles] = React.useState<number>(2);
+  const [cycles, setCycles] = React.useState<DateRange[]>([]);
+
+  // Trim cycles if max is reduced
+  const handleMaxCyclesChange = React.useCallback((next: number) => {
+    const safe = Number.isFinite(next) ? Math.max(1, Math.floor(next)) : 1;
+    setMaxCycles(safe);
+    setCycles((prev) => (prev.length > safe ? prev.slice(0, safe) : prev));
+  }, []);
+
+  const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
+
   return (
     <>
       <ModeToggle />
-      <Calendar
-        mode="range"
-        // defaultMonth={dateRange?.from}
-        selected={dateRange}
-        onSelect={setDateRange}
-        numberOfMonths={2}
-        className="rounded-lg border shadow-sm"
-      />
+      <div>
+        <CycleSelect
+          cycles={cycles}
+          onChange={setCycles}
+          maxCycles={maxCycles}
+          onMaxCyclesChange={handleMaxCyclesChange}
+          defaultMonth={defaultMonth}
+          numberOfMonths={2}
+          showControls
+          showLegend
+          captionCurrentLabel="Current month"
+          captionNextLabel="Next Month"
+        />
+      </div>
     </>
   );
 }
