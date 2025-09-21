@@ -55,30 +55,62 @@ export function CycleSelect({
 }: CycleSelectProps) {
   const [draftCycle, setDraftCycle] = React.useState<DateRange | undefined>();
 
+  // Helper to check if a date is in the current month (first month displayed)
+  const isInCurrentMonth = React.useCallback(
+    (date: Date) => {
+      if (!defaultMonth) return true;
+      return (
+        date.getFullYear() === defaultMonth.getFullYear() &&
+        date.getMonth() === defaultMonth.getMonth()
+      );
+    },
+    [defaultMonth]
+  );
+
+  // Helper to check if a cycle is valid (starts in current month)
+  const isValidCycle = React.useCallback(
+    (cycle: DateRange) => {
+      if (!cycle.from) return false;
+      return isInCurrentMonth(cycle.from);
+    },
+    [isInCurrentMonth]
+  );
+
   const handleDayClick = React.useCallback(
     (day: Date) => {
       if (!draftCycle || (draftCycle.from && draftCycle.to)) {
+        // Starting a new cycle - must start in current month
         if (cycles.length >= maxCycles) return;
+        if (!isInCurrentMonth(day)) return;
         setDraftCycle({ from: day, to: undefined });
         return;
       }
 
       const start = draftCycle.from!;
+
+      // If clicking before start, swap but ensure start is still in current month
       if (day < start) {
+        if (!isInCurrentMonth(day)) return; // New start must be in current month
         const newCycle: DateRange = { from: day, to: start };
-        onChange([...cycles, newCycle]);
-        setDraftCycle(undefined);
+        if (isValidCycle(newCycle)) {
+          onChange([...cycles, newCycle]);
+          setDraftCycle(undefined);
+        }
       } else if (day.getTime() === start.getTime()) {
+        // Single-day range - already validated start is in current month
         const newCycle: DateRange = { from: start, to: start };
         onChange([...cycles, newCycle]);
         setDraftCycle(undefined);
       } else {
+        // Extending to later date - can be in next month
         const newCycle: DateRange = { from: start, to: day };
-        onChange([...cycles, newCycle]);
-        setDraftCycle(undefined);
+        if (isValidCycle(newCycle)) {
+          onChange([...cycles, newCycle]);
+          setDraftCycle(undefined);
+        }
       }
     },
-    [draftCycle, cycles, maxCycles, onChange]
+    [draftCycle, cycles, maxCycles, onChange, isInCurrentMonth, isValidCycle]
   );
 
   const handleReset = React.useCallback(() => {
@@ -153,39 +185,8 @@ export function CycleSelect({
 
   return (
     <div className={cn("w-fit", className)}>
-      <Calendar
-        hideNavigation={hideNavigation}
-        modifiers={{
-          range_start: rangeStart,
-          range_middle: rangeMiddle,
-          range_end: rangeEnd,
-          ...colorModifiers,
-        }}
-        modifiersStyles={colorStyles}
-        onDayClick={handleDayClick}
-        numberOfMonths={numberOfMonths}
-        defaultMonth={defaultMonth}
-        className="rounded-t-lg border [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]"
-        components={{
-          Weekday: () => <td />,
-          MonthCaption: ({
-            displayIndex,
-            calendarMonth, // eslint-disable-line @typescript-eslint/no-unused-vars
-            ...divProps
-          }: {
-            calendarMonth: CalendarMonth;
-            displayIndex: number;
-          } & React.HTMLAttributes<HTMLDivElement>) => {
-            return (
-              <div {...divProps}>
-                {displayIndex === 0 ? captionCurrentLabel : captionNextLabel}
-              </div>
-            );
-          },
-        }}
-      />
       {showControls && (
-        <div className="flex items-center gap-3 p-4 border-t-0 border rounded-b-lg">
+        <div className="flex items-center gap-3 p-4 border border-b-0 rounded-t-lg">
           {onMaxCyclesChange && (
             <label className="flex items-center gap-2 text-sm">
               <span>Number of cycles</span>
@@ -215,8 +216,39 @@ export function CycleSelect({
           )}
         </div>
       )}
+      <Calendar
+        hideNavigation={hideNavigation}
+        modifiers={{
+          range_start: rangeStart,
+          range_middle: rangeMiddle,
+          range_end: rangeEnd,
+          ...colorModifiers,
+        }}
+        modifiersStyles={colorStyles}
+        onDayClick={handleDayClick}
+        numberOfMonths={numberOfMonths}
+        defaultMonth={defaultMonth}
+        className="border [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]"
+        components={{
+          Weekday: () => <td />,
+          MonthCaption: ({
+            displayIndex,
+            calendarMonth, // eslint-disable-line @typescript-eslint/no-unused-vars
+            ...divProps
+          }: {
+            calendarMonth: CalendarMonth;
+            displayIndex: number;
+          } & React.HTMLAttributes<HTMLDivElement>) => {
+            return (
+              <div {...divProps}>
+                {displayIndex === 0 ? captionCurrentLabel : captionNextLabel}
+              </div>
+            );
+          },
+        }}
+      />
       {showLegend && cycles.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+        <div className="border border-t-0 p-4 flex flex-wrap items-center gap-3 text-sm">
           {cycles.map((r, i) => (
             <div key={i} className="flex items-center gap-2">
               <span
@@ -224,8 +256,9 @@ export function CycleSelect({
                 style={{ backgroundColor: palette[i % palette.length] }}
               />
               <span>
-                Cycle {i + 1}: {r.from?.toLocaleDateString()} —{" "}
-                {r.to?.toLocaleDateString()}
+                Cycle {i + 1}:{" "}
+                {r.from?.toLocaleDateString("en-US", { day: "numeric" })} —{" "}
+                {r.to?.toLocaleDateString("en-US", { day: "numeric" })}
               </span>
             </div>
           ))}
