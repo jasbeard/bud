@@ -21,7 +21,7 @@ export default function Home() {
   return (
     <>
       <ModeToggle />
-      <div>
+      <div className="pl-4">
         <CycleSelect
           cycles={cycles}
           onChange={setCycles}

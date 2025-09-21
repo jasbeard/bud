@@ -186,34 +186,46 @@ export function CycleSelect({
   return (
     <div className={cn("w-fit", className)}>
       {showControls && (
-        <div className="flex items-center gap-3 p-4 border border-b-0 rounded-t-lg">
-          {onMaxCyclesChange && (
-            <label className="flex items-center gap-2 text-sm">
-              <span>Number of cycles</span>
-              <input
-                type="number"
-                min={1}
-                value={maxCycles}
-                onChange={(e) =>
-                  handleMaxCyclesChangeInternal(parseInt(e.target.value, 10))
-                }
-                className="w-16 rounded border px-2 py-1"
-              />
-            </label>
-          )}
-          <span className="text-xs text-muted-foreground">
-            {cycles.length}/{maxCycles} selected
-          </span>
-          {showReset && (
+        <div className="flex w-full border border-b-0 rounded-t-lg">
+          <div className="flex-[0.9] flex items-center gap-3 p-4 border border-t-0 border-l-0 border-b-0">
+            {onMaxCyclesChange && (
+              <label className="flex items-center gap-2 text-sm">
+                <span>Number of cycles</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={maxCycles}
+                  onChange={(e) =>
+                    handleMaxCyclesChangeInternal(parseInt(e.target.value, 10))
+                  }
+                  className="w-16 rounded border px-2 py-1"
+                />
+              </label>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {cycles.length}/{maxCycles} selected
+            </span>
+            {showReset && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleReset}
+                className="ml-auto cursor-pointer"
+              >
+                Reset
+              </Button>
+            )}
+          </div>
+          <div className="flex-[0.1] p-4">
             <Button
               type="button"
               variant="secondary"
-              onClick={handleReset}
+              // onClick={handleReset}
               className="ml-auto cursor-pointer"
             >
-              Reset cycles
+              Save
             </Button>
-          )}
+          </div>
         </div>
       )}
       <Calendar
@@ -247,10 +259,15 @@ export function CycleSelect({
           },
         }}
       />
+
       {showLegend && cycles.length > 0 && (
-        <div className="border border-t-0 p-4 flex flex-wrap items-center gap-3 text-sm">
+        <div
+          className={`w-full border border-t-0 p-4 flex items-center gap-3 text-sm" ${
+            cycles.length < 5 && "flex flex-wrap"
+          }`}
+        >
           {cycles.map((r, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-center gap-2 pr-4">
               <span
                 className="inline-block size-3 rounded"
                 style={{ backgroundColor: palette[i % palette.length] }}
