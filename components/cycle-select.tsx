@@ -185,6 +185,12 @@ export function CycleSelect({
 
   return (
     <div className={cn("w-fit", className)}>
+      <div className="mb-2">
+        <h2 className="text-xl">Set your budget cycle</h2>
+        <span className="text-sm text-muted-foreground">
+          Setting a cycle helps organize your budget
+        </span>
+      </div>
       {showControls && (
         <div className="flex w-full border border-b-0 rounded-t-lg">
           <div className="flex-[0.9] flex items-center gap-3 p-4 border border-t-0 border-l-0 border-b-0">
@@ -259,7 +265,6 @@ export function CycleSelect({
           },
         }}
       />
-
       {showLegend && cycles.length > 0 && (
         <div
           className={`w-full border border-t-0 p-4 flex items-center gap-3 text-sm" ${
