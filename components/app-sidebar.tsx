@@ -9,14 +9,17 @@ import {
   IconFileAi,
   IconFileDescription,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
+  IconCoins,
+  IconPigMoney,
+  IconInvoice,
+  IconDeviceAudioTape,
+  IconCommand,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -27,40 +30,60 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { BudgetSpaceSwitcher } from "./budget-space-switcher";
 
 const data = {
+  budgetSpace: [
+    {
+      name: "Household",
+      logo: IconInnerShadowTop,
+      plan: "Pro",
+    },
+    {
+      name: "Travel",
+      logo: IconDeviceAudioTape,
+      plan: "Basic",
+    },
+    {
+      name: "Personal",
+      logo: IconCommand,
+      plan: "Lifetime",
+    },
+  ],
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: "Jason",
+    email: "me@jasonbarba.com",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "#",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "Budget",
       url: "#",
-      icon: IconListDetails,
+      icon: IconCoins,
     },
     {
-      title: "Analytics",
+      title: "Networth",
+      url: "#",
+      icon: IconPigMoney,
+    },
+    {
+      title: "Insight",
       url: "#",
       icon: IconChartBar,
     },
     {
-      title: "Projects",
+      title: "Transaction",
       url: "#",
-      icon: IconFolder,
+      icon: IconInvoice,
     },
     {
-      title: "Team",
+      title: "Collaborate",
       url: "#",
       icon: IconUsers,
     },
@@ -153,19 +176,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <BudgetSpaceSwitcher spaces={data.budgetSpace} />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

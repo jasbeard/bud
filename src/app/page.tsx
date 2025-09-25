@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
-import { ModeToggle } from "@/components/mode-toggle";
 import { CycleSelect } from "@/components/cycle-select";
 
 export default function Home() {
@@ -20,7 +19,6 @@ export default function Home() {
 
   return (
     <>
-      <ModeToggle />
       <div className="pl-4">
         <CycleSelect
           cycles={cycles}
