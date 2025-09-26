@@ -4,7 +4,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 // import data from "./data.json"
 
-export default function Page() {
+export default async function Page() {
   return (
     <SidebarProvider
       style={

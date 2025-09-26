@@ -5,21 +5,21 @@ import {
   IconCamera,
   IconChartBar,
   IconDashboard,
-  IconDatabase,
   IconFileAi,
   IconFileDescription,
-  IconFileWord,
   IconHelp,
   IconInnerShadowTop,
-  IconReport,
   IconSearch,
-  IconSettings,
   IconUsers,
   IconCoins,
   IconPigMoney,
   IconInvoice,
   IconDeviceAudioTape,
   IconCommand,
+  IconCategory2,
+  IconFileExport,
+  IconAdjustmentsCog,
+  IconCalendarRepeat,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -32,6 +32,7 @@ import {
   SidebarHeader,
 } from "@/components/ui/sidebar";
 import { BudgetSpaceSwitcher } from "./budget-space-switcher";
+import { NavSettings } from "./nav-settings";
 
 const data = {
   budgetSpace: [
@@ -59,7 +60,7 @@ const data = {
   navMain: [
     {
       title: "Overview",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
@@ -68,17 +69,12 @@ const data = {
       icon: IconCoins,
     },
     {
-      title: "Networth",
-      url: "#",
-      icon: IconPigMoney,
-    },
-    {
       title: "Insight",
       url: "#",
       icon: IconChartBar,
     },
     {
-      title: "Transaction",
+      title: "Transactions",
       url: "#",
       icon: IconInvoice,
     },
@@ -138,9 +134,9 @@ const data = {
   ],
   navSecondary: [
     {
-      title: "Settings",
+      title: "Networth",
       url: "#",
-      icon: IconSettings,
+      icon: IconPigMoney,
     },
     {
       title: "Get Help",
@@ -153,21 +149,26 @@ const data = {
       icon: IconSearch,
     },
   ],
-  documents: [
+  settings: [
     {
-      name: "Data Library",
+      name: "General",
       url: "#",
-      icon: IconDatabase,
+      icon: IconAdjustmentsCog,
     },
     {
-      name: "Reports",
+      name: "Budget Cycle",
       url: "#",
-      icon: IconReport,
+      icon: IconCalendarRepeat,
     },
     {
-      name: "Word Assistant",
+      name: "Transaction Categories",
       url: "#",
-      icon: IconFileWord,
+      icon: IconCategory2,
+    },
+    {
+      name: "Export Data",
+      url: "#",
+      icon: IconFileExport,
     },
   ],
 };
@@ -180,6 +181,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
+        <NavSettings items={data.settings} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
