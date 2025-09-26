@@ -65,7 +65,7 @@ const data = {
     },
     {
       title: "Budget",
-      url: "#",
+      url: "/budget",
       icon: IconCoins,
     },
     {
