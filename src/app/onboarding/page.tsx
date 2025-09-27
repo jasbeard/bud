@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,11 +9,46 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { ChevronRight } from "lucide-react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const formSchema = z.object({
+  budgetspace: z
+    .string()
+    .min(1, "Budgetspace name is required")
+    .min(2, "Budgetspace name must be at least 2 characters")
+    .max(50, "Budgetspace name must be less than 50 characters")
+    .regex(
+      /^[a-zA-Z0-9\s\-_]+$/,
+      "Only letters, numbers, spaces, hyphens, and underscores are allowed"
+    ),
+});
+
+type FormData = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const form = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      budgetspace: "",
+    },
+  });
+
+  const onSubmit = (data: FormData) => {
+    console.log("Form submitted:", data);
+    // Handle form submission here
+  };
   return (
     <div className="flex justify-center items-center h-dvh">
       <Card className="w-full max-w-md">
@@ -23,30 +60,35 @@ export default function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="budgetspace">Budgetspace</Label>
-                <Input
-                  id="email"
-                  type="text"
-                  placeholder="E.g. Household"
-                  required
-                />
-              </div>
-            </div>
-          </form>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="budgetspace"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budgetspace</FormLabel>
+                    <FormControl>
+                      <Input placeholder="E.g. Household" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <CardFooter className="flex justify-end p-0">
+                <Button
+                  type="submit"
+                  size="icon"
+                  variant="outline"
+                  className="rounded-full cursor-pointer"
+                  disabled={form.formState.isSubmitting}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </form>
+          </Form>
         </CardContent>
-        <CardFooter className="flex justify-end">
-          <Button
-            type="submit"
-            size="icon"
-            variant="outline"
-            className="rounded-full cursor-pointer"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </CardFooter>
       </Card>
     </div>
   );
