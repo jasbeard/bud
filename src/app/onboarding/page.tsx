@@ -45,9 +45,36 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log("Form submitted:", data);
-    // Handle form submission here
+  const onSubmit = async (data: FormData) => {
+    try {
+      // For now, we'll use a mock user ID. In a real app, this would come from authentication
+      const mockUserId = "123e4567-e89b-12d3-a456-426614174000";
+
+      const response = await fetch("/api/budgetspaces", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: data.budgetspace,
+          userId: mockUserId,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to create budgetspace");
+      }
+
+      const result = await response.json();
+      console.log("Budgetspace created:", result);
+
+      // Redirect to dashboard or next step
+      // router.push('/dashboard');
+    } catch (error) {
+      console.error("Error creating budgetspace:", error);
+      // Handle error (show toast, etc.)
+    }
   };
   return (
     <div className="flex justify-center items-center h-dvh">
