@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { budgetspaces } from "@/lib/schema";
+import { budgetspaces, users } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 const createBudgetspaceSchema = z.object({
   name: z.string().min(1).max(50),
   description: z.string().optional(),
-  userId: z.string().uuid(),
-});
-
-const updateBudgetspaceSchema = z.object({
-  name: z.string().min(1).max(50).optional(),
-  description: z.string().optional(),
+  userId: z.uuid(),
 });
 
 // GET /api/budgetspaces - Get all budgetspaces for a user
@@ -65,6 +60,14 @@ export async function POST(request: NextRequest) {
         isDefault,
       })
       .returning();
+
+    // If this is the user's first budgetspace, mark onboarding as done
+    if (isDefault) {
+      await db
+        .update(users)
+        .set({ onboarded: true })
+        .where(eq(users.id, validatedData.userId));
+    }
 
     return NextResponse.json(newBudgetspace[0], { status: 201 });
   } catch (error) {

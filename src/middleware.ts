@@ -1,8 +1,10 @@
+import { auth } from "@/lib/auth";
 import { getSessionCookie } from "better-auth/cookies";
+import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 // 1. Specify protected and public routes
-const protectedRoutes = ["/dashboard"];
+const protectedRoutes = ["/dashboard", "/budget", "/onboarding"];
 const publicRoutes = ["/login", "/signup", "/"];
 
 export default async function middleware(req: NextRequest) {
@@ -12,20 +14,24 @@ export default async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(path);
 
   // 3. get better-auth session
-  const sessionCookie = getSessionCookie(req);
+  // const session = await auth.api.getSession({
+  //   headers: await headers(),
+  // });
 
+  const sessionCookie = getSessionCookie(req);
+  console.log("sessiontx: ", sessionCookie);
   // 4. Redirect to /login if the user is not authenticated
   if (isProtectedRoute && !sessionCookie) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  // 5. Redirect to /dashboard if the user is authenticated
+  // 5. Redirect to /onboarding if the user is authenticated
   if (
     isPublicRoute &&
     sessionCookie &&
-    !req.nextUrl.pathname.startsWith("/dashboard")
+    !req.nextUrl.pathname.startsWith("/onboarding")
   ) {
-    return NextResponse.redirect(new URL("/dashboard", req.nextUrl));
+    return NextResponse.redirect(new URL("/onboarding", req.nextUrl));
   }
 
   return NextResponse.next();

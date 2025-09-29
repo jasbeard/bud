@@ -120,6 +120,13 @@
       "when": 1759068071449,
       "tag": "0016_flippant_sunset_bain",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1759152625888,
+      "tag": "0017_narrow_scorpion",
+      "breakpoints": true
     }
   ]
 }

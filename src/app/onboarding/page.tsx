@@ -18,7 +18,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { ChevronRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -105,12 +105,13 @@ export default function Page() {
               <CardFooter className="flex justify-end p-0">
                 <Button
                   type="submit"
-                  size="icon"
+                  size="sm"
                   variant="outline"
-                  className="rounded-full cursor-pointer"
+                  className="cursor-pointer px-2 font-normal text-sm text-muted-foreground"
                   disabled={form.formState.isSubmitting}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <div>Next</div>
+                  <MoveRight className="h-4 w-4" />
                 </Button>
               </CardFooter>
             </form>

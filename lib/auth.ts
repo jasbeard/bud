@@ -19,6 +19,11 @@ export const auth = betterAuth({
     database: {
       generateId: false,
     },
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

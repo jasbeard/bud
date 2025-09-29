@@ -1,9 +1,13 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeader } from "@/components/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
+
+export function BlankLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
 
 export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -33,10 +37,6 @@ export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
       </SidebarInset>
     </SidebarProvider>
   );
-}
-
-export function BlankLayout({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
 }
 
 export function DynamicallySharedLayout({
