@@ -1,8 +1,7 @@
 "use server";
 
-import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest } from "next/server";
 
 export function checkOnboardingStatus(req: NextRequest) {
-  const sessionCookie = getSessionCookie(req);
+  // TODO: query users.onboarded to check status as part of redirection logic
 }
