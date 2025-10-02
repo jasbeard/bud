@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import * as SelectPrimitive from "@radix-ui/react-select";
 
 type Options = { label: string; value: string };
 type SelectTransactionProps = {
@@ -21,10 +22,12 @@ export function SelectTransaction({
   options,
   label,
   placeholder,
-}: SelectTransactionProps) {
+  ...props
+}: SelectTransactionProps &
+  React.ComponentProps<typeof SelectPrimitive.Trigger>) {
   return (
     <Select>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger id={props.id} className={`w-[180px] ${props.className}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>

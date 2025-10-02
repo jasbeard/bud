@@ -67,26 +67,44 @@ export function NewTransactionDialog({
             Create a new transaction by filling out the details below.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-2">
-          <SelectTransaction
-            options={trasactionKinds}
-            label="Transaction types"
-            placeholder="Select type"
-          />
+        <div className="flex flex-col gap-4">
           <div className="grid flex-1 gap-2">
-            <Label htmlFor="amount" className="sr-only">
+            <Label htmlFor="amount" className="">
               Amount
             </Label>
-            <Input placeholder="Amount" className="w-2/5" />
+            <Input
+              id="amount"
+              placeholder="Amount"
+              type="number"
+              className="w-2/5"
+            />
           </div>
-          <Combobox
-            options={categories}
-            placeholder="Select category"
-            searchPlaceholder="Search category"
-            searchNotFoundText="Categoty not found"
-          />
           <div className="grid flex-1 gap-2">
-            <Label htmlFor="description" className="sr-only">
+            <Label htmlFor="transactionType" className="">
+              Transaction type
+            </Label>
+            <SelectTransaction
+              id="transactionType"
+              options={trasactionKinds}
+              label="Transaction types"
+              placeholder="Select type"
+            />
+          </div>
+          <div className="grid flex-1 gap-2">
+            <Label htmlFor="Category" className="">
+              Category
+            </Label>
+            <Combobox
+              // todo: add id for label
+              options={categories}
+              placeholder="Select category"
+              searchPlaceholder="Search category"
+              searchNotFoundText="Categoty not found"
+            />
+          </div>
+
+          <div className="grid flex-1 gap-2">
+            <Label htmlFor="description" className="">
               Description
             </Label>
             <Textarea id="description" placeholder="Description" />
