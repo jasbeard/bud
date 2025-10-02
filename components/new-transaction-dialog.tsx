@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -11,8 +10,9 @@ import {
 } from "@/components/ui/diaglog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "./ui/textarea";
-import { Combobox } from "./combobox-";
+import { Combobox } from "./combobox";
 import { Input } from "./ui/input";
+import { SelectTransaction } from "./select-transaction";
 
 const trasactionKinds = [
   {
@@ -68,11 +68,10 @@ export function NewTransactionDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <Combobox
+          <SelectTransaction
             options={trasactionKinds}
-            placeholder="Select transcation type"
-            searchPlaceholder="Search type"
-            searchNotFoundText="Type not found"
+            label="Transaction types"
+            placeholder="Select type"
           />
           <div className="grid flex-1 gap-2">
             <Label htmlFor="amount" className="sr-only">
