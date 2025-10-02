@@ -13,6 +13,7 @@ import { Textarea } from "./ui/textarea";
 import { Combobox } from "./combobox";
 import { Input } from "./ui/input";
 import { SelectTransaction } from "./select-transaction";
+import { DatePickerTransaction } from "./date-picker-transaction";
 
 const trasactionKinds = [
   {
@@ -60,35 +61,41 @@ export function NewTransactionDialog({
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md gap-8">
         <DialogHeader>
           <DialogTitle>New Transaction</DialogTitle>
           <DialogDescription>
             Create a new transaction by filling out the details below.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          <div className="grid flex-1 gap-2">
-            <Label htmlFor="amount" className="">
-              Amount
-            </Label>
-            <Input
-              id="amount"
-              placeholder="Amount"
-              type="number"
-              className="w-2/5"
-            />
-          </div>
-          <div className="grid flex-1 gap-2">
-            <Label htmlFor="transactionType" className="">
-              Transaction type
-            </Label>
-            <SelectTransaction
-              id="transactionType"
-              options={trasactionKinds}
-              label="Transaction types"
-              placeholder="Select type"
-            />
+        <div className="flex flex-col gap-6">
+          <div className="flex gap-2">
+            <div className="flex flex-col flex-1 gap-2">
+              <Label htmlFor="amount" className="">
+                Amount
+              </Label>
+              <Input
+                id="amount"
+                placeholder="Amount"
+                type="number"
+                className=""
+              />
+            </div>
+            <div className="flex flex-col flex-1 gap-2">
+              <Label htmlFor="type" className="">
+                Type
+              </Label>
+              <SelectTransaction
+                id="type"
+                options={trasactionKinds}
+                label="Transaction types"
+                placeholder="Select type"
+                className="w-full"
+              />
+            </div>
+            {/* <div className="flex flex-col flex-1 gap-2">
+              
+            </div> */}
           </div>
           <div className="grid flex-1 gap-2">
             <Label htmlFor="Category" className="">
@@ -102,10 +109,12 @@ export function NewTransactionDialog({
               searchNotFoundText="Categoty not found"
             />
           </div>
-
+          <div className="grid flex-1 gap-2">
+            <DatePickerTransaction />
+          </div>
           <div className="grid flex-1 gap-2">
             <Label htmlFor="description" className="">
-              Description
+              Note
             </Label>
             <Textarea id="description" placeholder="Description" />
           </div>

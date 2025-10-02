@@ -27,7 +27,7 @@ export function SelectTransaction({
   React.ComponentProps<typeof SelectPrimitive.Trigger>) {
   return (
     <Select>
-      <SelectTrigger id={props.id} className={`w-[180px] ${props.className}`}>
+      <SelectTrigger id={props.id} className={`${props.className}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
