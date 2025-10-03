@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 import { DynamicallySharedLayout } from "@/components/layouts";
+import { OnboardingPopover } from "@/components/onboarding-popover";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <DynamicallySharedLayout>{children}</DynamicallySharedLayout>
+          <OnboardingPopover />
         </ThemeProvider>
       </body>
     </html>

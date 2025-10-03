@@ -72,7 +72,7 @@ export function DatePickerTransaction() {
             <Button
               id="date-picker"
               variant="ghost"
-              className="absolute top-1/2 right-2 size-6 -translate-y-1/2"
+              className="cursor-pointer absolute top-1/2 right-2 size-6 -translate-y-1/2"
             >
               <CalendarIcon className="size-3.5" />
               <span className="sr-only">Select date</span>
