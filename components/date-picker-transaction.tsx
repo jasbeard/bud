@@ -21,7 +21,7 @@ function formatDate(date: Date | undefined) {
 
   return date.toLocaleDateString("en-US", {
     day: "2-digit",
-    month: "long",
+    month: "short",
     year: "numeric",
   });
 }
@@ -36,9 +36,16 @@ export function DatePickerTransaction() {
 
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="date" className="px-1">
-        Schedule Date
-      </Label>
+      <div className="flex gap-2 justify-between">
+        <div className="flex">
+          <Label htmlFor="date" className="align-baseline">
+            Date
+          </Label>
+        </div>
+        <div className="text-muted-foreground px-1 text-xs">
+          Scheduled for <span className="font-medium">{formatDate(date)}</span>
+        </div>
+      </div>
       <div className="relative flex gap-2">
         <Input
           id="date"
@@ -87,9 +94,52 @@ export function DatePickerTransaction() {
           </PopoverContent>
         </Popover>
       </div>
-      <div className="text-muted-foreground px-1 text-xs">
-        Your transaction will be created on{" "}
-        <span className="font-medium">{formatDate(date)}</span>.
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => {
+            setValue("Yesterday");
+            const date = parseDate("Yesterday");
+            if (date) {
+              setDate(date);
+              setMonth(date);
+            }
+          }}
+        >
+          Yesterday
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => {
+            setValue("Today");
+            const date = parseDate("Today");
+            if (date) {
+              setDate(date);
+              setMonth(date);
+            }
+          }}
+        >
+          Today
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => {
+            setValue("Tomorrow");
+            const date = parseDate("Tomorrow");
+            if (date) {
+              setDate(date);
+              setMonth(date);
+            }
+          }}
+        >
+          Tomorrow
+        </Button>
       </div>
     </div>
   );
