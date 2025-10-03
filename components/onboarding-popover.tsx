@@ -1,11 +1,21 @@
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle,
+} from "./ui/item";
+import {
+  ChevronRightIcon,
+  CircleCheckIcon,
+  CircleDashedIcon,
+} from "lucide-react";
 
 export function OnboardingPopover() {
   return (
@@ -24,7 +34,7 @@ export function OnboardingPopover() {
         align="end"
         alignOffset={6}
         sideOffset={6}
-        className="w-80"
+        className="w-90"
       >
         <div className="grid gap-4">
           <div className="space-y-2">
@@ -36,7 +46,53 @@ export function OnboardingPopover() {
               {/* 3. Kickstart your experience with bud by following these recommended onboarding tasks. */}
             </p>
           </div>
-          <div className="grid gap-2"></div>
+          <div className="grid gap-2">
+            <div className="grid items-center">
+              <Item variant="outline" size="sm" asChild>
+                <a href="#">
+                  <ItemMedia>
+                    <CircleCheckIcon className="size-5 fill-green-500 text-white" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Create your first budgetspace</ItemTitle>
+                  </ItemContent>
+                  <ItemActions>
+                    <ChevronRightIcon className="size-4" />
+                  </ItemActions>
+                </a>
+              </Item>
+            </div>
+            <div className="grid items-center">
+              <Item variant="outline" size="sm" asChild>
+                <a href="#">
+                  <ItemMedia>
+                    <CircleDashedIcon className="size-5 text-muted-foreground" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Add your first transaction</ItemTitle>
+                  </ItemContent>
+                  <ItemActions>
+                    <ChevronRightIcon className="size-4" />
+                  </ItemActions>
+                </a>
+              </Item>
+            </div>
+            <div className="grid items-center">
+              <Item variant="outline" size="sm" asChild>
+                <a href="#">
+                  <ItemMedia>
+                    <CircleDashedIcon className="size-5 text-muted-foreground" />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>Invite and collaborate</ItemTitle>
+                  </ItemContent>
+                  <ItemActions>
+                    <ChevronRightIcon className="size-4" />
+                  </ItemActions>
+                </a>
+              </Item>
+            </div>
+          </div>
         </div>
       </PopoverContent>
     </Popover>
