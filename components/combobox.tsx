@@ -25,60 +25,93 @@ type ComboboxProps = {
   placeholder: string;
   searchPlaceholder: string;
   searchNotFoundText: string;
-};
+} & React.ComponentProps<"button">;
 
 export function Combobox({
   options,
   placeholder,
   searchPlaceholder,
   searchNotFoundText,
+  ...props
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            {...props}
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn(
+              "w-full justify-between font-normal text-muted-foreground",
+              props.className
+            )}
+          >
+            {value
+              ? options.find((option) => option.value === value)?.label
+              : placeholder}
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="w-[200px] p-0">
+          <Command>
+            <CommandInput placeholder={searchPlaceholder} className="h-9" />
+            <CommandList>
+              <CommandEmpty>{searchNotFoundText}</CommandEmpty>
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    value={option.value}
+                    onSelect={(currentValue) => {
+                      setValue(currentValue === value ? "" : currentValue);
+                      setOpen(false);
+                    }}
+                  >
+                    {option.label}
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        value === option.value ? "opacity-100" : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <div className="flex gap-2">
         <Button
+          size="sm"
           variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className="w-full justify-between font-normal text-muted-foreground"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => setValue("food")}
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
-          <ChevronsUpDown className="opacity-50" />
+          Food
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-[200px] p-0">
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} className="h-9" />
-          <CommandList>
-            <CommandEmpty>{searchNotFoundText}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.value}
-                  onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
-                    setOpen(false);
-                  }}
-                >
-                  {option.label}
-                  <Check
-                    className={cn(
-                      "ml-auto",
-                      value === option.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => setValue("transportation")}
+        >
+          Transportation
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+          onClick={() => setValue("bill")}
+        >
+          Bill
+        </Button>
+      </div>
+    </>
   );
 }

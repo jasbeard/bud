@@ -98,11 +98,14 @@ export function NewTransactionDialog({
             </div> */}
           </div>
           <div className="grid flex-1 gap-2">
-            <Label htmlFor="Category" className="">
-              Category
-            </Label>
+            <div className="flex justify-between">
+              <Label htmlFor="Category" className="">
+                Category
+              </Label>
+              <div className="text-muted-foreground text-xs">Manage</div>
+            </div>
             <Combobox
-              // todo: add id for label
+              id="Category"
               options={categories}
               placeholder="Select category"
               searchPlaceholder="Search category"
