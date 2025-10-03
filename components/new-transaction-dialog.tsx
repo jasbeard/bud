@@ -93,16 +93,15 @@ export function NewTransactionDialog({
                 className="w-full"
               />
             </div>
-            {/* <div className="flex flex-col flex-1 gap-2">
-              
-            </div> */}
           </div>
           <div className="grid flex-1 gap-2">
             <div className="flex justify-between">
               <Label htmlFor="Category" className="">
                 Category
               </Label>
-              <div className="text-muted-foreground text-xs">Manage</div>
+              <div className="text-muted-foreground text-xs decoration-muted-foreground hover:underline cursor-pointer">
+                Manage
+              </div>
             </div>
             <Combobox
               id="Category"
@@ -123,7 +122,7 @@ export function NewTransactionDialog({
           </div>
         </div>
         <DialogFooter className="sm:justify-end">
-          <Button type="button" variant="secondary" className="cursor-pointer">
+          <Button type="submit" variant="default" className="cursor-pointer">
             Create
           </Button>
         </DialogFooter>

@@ -26,7 +26,7 @@ export function SelectTransaction({
 }: SelectTransactionProps &
   React.ComponentProps<typeof SelectPrimitive.Trigger>) {
   return (
-    <Select>
+    <Select defaultValue="expense">
       <SelectTrigger id={props.id} className={`${props.className}`}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
