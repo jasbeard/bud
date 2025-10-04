@@ -1,3 +1,5 @@
+import { EmptyBudget } from "@/components/empty-budget";
+
 export default async function Page() {
-  return <div>This is budget page</div>;
+  return <EmptyBudget />;
 }
