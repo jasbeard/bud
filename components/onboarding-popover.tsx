@@ -69,6 +69,21 @@ export function OnboardingPopover() {
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   </ItemMedia>
                   <ItemContent>
+                    <ItemTitle>Plan your budgets</ItemTitle>
+                  </ItemContent>
+                  <ItemActions>
+                    <ChevronRightIcon className="size-4" />
+                  </ItemActions>
+                </a>
+              </Item>
+            </div>
+            <div className="grid items-center">
+              <Item variant="outline" size="sm" asChild>
+                <a href="#">
+                  <ItemMedia>
+                    <CircleDashedIcon className="size-5 text-muted-foreground" />
+                  </ItemMedia>
+                  <ItemContent>
                     <ItemTitle>Add your first transaction</ItemTitle>
                   </ItemContent>
                   <ItemActions>
