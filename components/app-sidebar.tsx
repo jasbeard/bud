@@ -20,6 +20,8 @@ import {
   IconFileExport,
   IconAdjustmentsCog,
   IconCalendarRepeat,
+  IconPlus,
+  IconDotsVertical,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -61,27 +63,28 @@ const data = {
     {
       title: "Overview",
       url: "/dashboard",
-      icon: IconDashboard,
+      mainIcon: IconDashboard,
     },
     {
       title: "Budget",
       url: "/budget",
-      icon: IconCoins,
+      mainIcon: IconCoins,
+      actionIcon: IconDotsVertical,
     },
     {
       title: "Insight",
       url: "#",
-      icon: IconChartBar,
+      mainIcon: IconChartBar,
     },
     {
       title: "Transactions",
       url: "#",
-      icon: IconInvoice,
+      mainIcon: IconInvoice,
     },
     {
       title: "Collaborate",
       url: "#",
-      icon: IconUsers,
+      mainIcon: IconUsers,
     },
   ],
   navClouds: [

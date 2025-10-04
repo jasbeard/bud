@@ -7,9 +7,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuAction,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { NewTransactionDialog } from "./new-transaction-dialog";
+import {
+  EyeIcon,
+  FolderIcon,
+  PlusCircleIcon,
+  PlusIcon,
+  ShareIcon,
+} from "lucide-react";
 
 export function NavMain({
   items,
@@ -17,9 +33,11 @@ export function NavMain({
   items: {
     title: string;
     url: string;
-    icon?: Icon;
+    mainIcon?: Icon;
+    actionIcon?: Icon;
   }[];
 }) {
+  const { isMobile } = useSidebar();
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -28,20 +46,12 @@ export function NavMain({
             <NewTransactionDialog>
               <SidebarMenuButton
                 tooltip="New Transaction"
-                className="bg-primary cursor-pointer text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+                className="bg-primary cursor-pointer font-medium rounded-full py-5 text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
               >
                 <IconCirclePlusFilled />
                 <span>New Transaction</span>
               </SidebarMenuButton>
             </NewTransactionDialog>
-            {/* <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <IconMail />
-              <span className="sr-only">Inbox</span>
-            </Button> */}
           </SidebarMenuItem>
         </SidebarMenu>
         <SidebarMenu>
@@ -49,10 +59,41 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton tooltip={item.title} asChild>
                 <Link href={item.url}>
-                  {item.icon && <item.icon />}
+                  {item.mainIcon && <item.mainIcon />}
                   <span>{item.title}</span>
+                  {/* {item.actionIcon && <item.actionIcon />} */}
                 </Link>
               </SidebarMenuButton>
+              {item.actionIcon && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <SidebarMenuAction>
+                      {item.actionIcon && <item.actionIcon />}
+                      <span className="sr-only">More</span>
+                    </SidebarMenuAction>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-48"
+                    side={isMobile ? "bottom" : "right"}
+                    align={isMobile ? "end" : "start"}
+                  >
+                    <DropdownMenuItem>
+                      <EyeIcon className="text-muted-foreground" />
+                      <span>View Budget</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <PlusIcon className="text-muted-foreground" />
+                      <span>Create Budget</span>
+                    </DropdownMenuItem>
+
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <ShareIcon className="text-muted-foreground" />
+                      <span>Share Budget</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
