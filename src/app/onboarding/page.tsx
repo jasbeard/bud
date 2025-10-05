@@ -25,6 +25,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { CycleSelect } from "@/components/cycle-select";
+import { InputWithInfoTooltip } from "@/components/input-with-info-tooltip";
 
 const formSchema = z.object({
   budgetspace: z
@@ -92,17 +93,16 @@ export default function Page() {
   };
   return (
     <div className="flex justify-center w-full h-dvh border border-red-300">
-      <div className="flex w-full max-w-3/4 border border-orange-300">
-        <div className="w-60">asd</div>
+      <div className="flex w-full max-w-[52%] border border-orange-300">
+        <div className="w-64">asd</div>
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Let&apos;s Get Started</CardTitle>
             <CardDescription>
-              Name your Budgetspace and set your cycle to start managing your
-              money smarter.
+              Name your Budgetspace and set your cycle to start.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="h-dvh">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -115,10 +115,17 @@ export default function Page() {
                     <FormItem>
                       <FormLabel>Budgetspace</FormLabel>
                       <FormControl>
-                        <Input
+                        {/* <Input
                           placeholder="E.g. Household"
                           {...field}
                           className="w-80"
+                        /> */}
+                        <InputWithInfoTooltip
+                          placeholder="Household"
+                          type="text"
+                          tooltipMessage="letters, numbers, spaces, hyphens, and underscores are okay"
+                          className="w-90"
+                          {...field}
                         />
                       </FormControl>
                       <FormMessage />
@@ -134,12 +141,12 @@ export default function Page() {
                   defaultMonth={defaultMonth}
                   numberOfMonths={2}
                   showControls
-                  showLegend
+                  // showLegend
                   captionCurrentLabel="Current month"
                   captionNextLabel="Next Month"
                 />
 
-                <CardFooter className="flex justify-end p-0">
+                <CardFooter className="flex self-end justify-end p-0">
                   <Button
                     type="submit"
                     size="sm"

@@ -26,17 +26,18 @@ export function CycleChoiceCard({
   onValueChange,
 }: CycleChoiceCardProps) {
   return (
-    <div className="w-full max-w-md">
+    <div className="w-full">
       <FieldGroup>
         <FieldSet>
           <FieldLabel>Budget cycle</FieldLabel>
           <FieldDescription>
-            Select a budget cycle for your budgetspace.
+            Select a budget cycle to manage your money smarter.
           </FieldDescription>
           <RadioGroup
             defaultValue={defaultValue}
             value={value}
             onValueChange={onValueChange}
+            className="flex flex-col"
           >
             <FieldLabel htmlFor="monthly-cycle">
               <Field orientation="horizontal" className="cursor-pointer">
@@ -57,7 +58,7 @@ export function CycleChoiceCard({
                 <FieldContent>
                   <FieldTitle>Custom</FieldTitle>
                   <FieldDescription>
-                    Customize your budget cycles. (E.g weekly, overlapping)
+                    Overlapping and multi-cycle setups
                   </FieldDescription>
                 </FieldContent>
                 <RadioGroupItem value={CycleChoises.CUSTOM} id="custom-cycle" />

@@ -202,9 +202,9 @@ export function CycleSelect({
         }
       />
       {cycleChoice === CycleChoises.CUSTOM && (
-        <div>
-          <div className="flex w-full border rounded-t-xl">
-            <div className="flex-1 flex items-center gap-2 p-2">
+        <div className="w-fit">
+          <div className="border rounded-t-xl">
+            <div className="flex items-center gap-2 p-2">
               {onMaxCyclesChange && (
                 <label className="flex items-center gap-2 text-sm font-medium">
                   <span>Number of cycles</span>
@@ -243,14 +243,13 @@ export function CycleSelect({
               range_start: rangeStart,
               range_middle: rangeMiddle,
               range_end: rangeEnd,
-              ...colorModifiers,
             }}
-            modifiersStyles={colorStyles}
+            // modifiersStyles={colorStyles}
             onDayClick={handleDayClick}
             numberOfMonths={numberOfMonths}
             defaultMonth={defaultMonth}
             // [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]
-            className="border w-full"
+            className="border"
             components={{
               Weekday: () => <td />,
               MonthCaption: ({
