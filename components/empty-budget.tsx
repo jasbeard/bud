@@ -10,6 +10,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { CreateBudgetDialog } from "./create-budget-dialog";
 
 export function EmptyBudget() {
   return (
@@ -26,7 +27,12 @@ export function EmptyBudget() {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <Button size="sm">Create Budget</Button>
+          <CreateBudgetDialog>
+            <Button size="sm" className="cursor-pointer">
+              Create Budget
+            </Button>
+          </CreateBudgetDialog>
+
           <Button variant="outline">Import Project</Button>
         </div>
       </EmptyContent>

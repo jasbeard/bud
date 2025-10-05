@@ -17,11 +17,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import * as React from "react";
+import { type DateRange } from "react-day-picker";
 import { Input } from "@/components/ui/input";
 import { MoveRight } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { CycleSelect } from "@/components/cycle-select";
 
 const formSchema = z.object({
   budgetspace: z
@@ -38,6 +41,17 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 export default function Page() {
+  const [maxCycles, setMaxCycles] = React.useState<number>(2);
+  const [cycles, setCycles] = React.useState<DateRange[]>([]);
+
+  // Trim cycles if max is reduced
+  const handleMaxCyclesChange = React.useCallback((next: number) => {
+    const safe = Number.isFinite(next) ? Math.max(1, Math.floor(next)) : 1;
+    setMaxCycles(safe);
+    setCycles((prev) => (prev.length > safe ? prev.slice(0, safe) : prev));
+  }, []);
+
+  const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,47 +91,71 @@ export default function Page() {
     }
   };
   return (
-    <div className="flex justify-center items-center h-dvh">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Let&apos;s Get Started</CardTitle>
-          <CardDescription>
-            Choose a name for your new Budgetspace. This will help you organize
-            and manage your finances.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="budgetspace"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Budgetspace</FormLabel>
-                    <FormControl>
-                      <Input placeholder="E.g. Household" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <CardFooter className="flex justify-end p-0">
-                <Button
-                  type="submit"
-                  size="sm"
-                  variant="outline"
-                  className="cursor-pointer px-2 font-normal text-sm text-muted-foreground"
-                  disabled={form.formState.isSubmitting}
-                >
-                  <div>Next</div>
-                  <MoveRight className="h-4 w-4" />
-                </Button>
-              </CardFooter>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className="flex justify-center w-full h-dvh border border-red-300">
+      <div className="flex w-full max-w-3/4 border border-orange-300">
+        <div className="w-60">asd</div>
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle>Let&apos;s Get Started</CardTitle>
+            <CardDescription>
+              Name your Budgetspace and set your cycle to start managing your
+              money smarter.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                <FormField
+                  control={form.control}
+                  name="budgetspace"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budgetspace</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="E.g. Household"
+                          {...field}
+                          className="w-80"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <CycleSelect
+                  cycles={cycles}
+                  onChange={setCycles}
+                  maxCycles={maxCycles}
+                  onMaxCyclesChange={handleMaxCyclesChange}
+                  defaultMonth={defaultMonth}
+                  numberOfMonths={2}
+                  showControls
+                  showLegend
+                  captionCurrentLabel="Current month"
+                  captionNextLabel="Next Month"
+                />
+
+                <CardFooter className="flex justify-end p-0">
+                  <Button
+                    type="submit"
+                    size="sm"
+                    variant="outline"
+                    className="cursor-pointer px-2 font-normal text-sm text-muted-foreground"
+                    disabled={form.formState.isSubmitting}
+                  >
+                    <div>Next</div>
+                    <MoveRight className="h-4 w-4" />
+                  </Button>
+                </CardFooter>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

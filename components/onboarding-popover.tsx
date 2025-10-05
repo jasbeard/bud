@@ -69,7 +69,7 @@ export function OnboardingPopover() {
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   </ItemMedia>
                   <ItemContent>
-                    <ItemTitle>Plan your budgets</ItemTitle>
+                    <ItemTitle>Select your budget cycle</ItemTitle>
                   </ItemContent>
                   <ItemActions>
                     <ChevronRightIcon className="size-4" />
@@ -84,7 +84,7 @@ export function OnboardingPopover() {
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   </ItemMedia>
                   <ItemContent>
-                    <ItemTitle>Add your first transaction</ItemTitle>
+                    <ItemTitle>Plan a budget</ItemTitle>
                   </ItemContent>
                   <ItemActions>
                     <ChevronRightIcon className="size-4" />
@@ -99,7 +99,7 @@ export function OnboardingPopover() {
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   </ItemMedia>
                   <ItemContent>
-                    <ItemTitle>Invite and collaborate</ItemTitle>
+                    <ItemTitle>Add a transaction</ItemTitle>
                   </ItemContent>
                   <ItemActions>
                     <ChevronRightIcon className="size-4" />

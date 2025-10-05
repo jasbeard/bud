@@ -9,6 +9,9 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { CycleChoiceCard, CycleChoises } from "./cycle-choice-card";
 
 export type CycleSelectProps = {
   cycles: DateRange[];
@@ -183,107 +186,115 @@ export function CycleSelect({
     [onMaxCyclesChange, cycles.length]
   );
 
+  const [cycleChoice, setCycleChoice] = React.useState<
+    CycleChoises.MONTHLY | CycleChoises.CUSTOM
+  >(CycleChoises.MONTHLY);
+
   return (
-    <div className={cn("w-fit", className)}>
-      <div className="mb-2">
-        <h2 className="text-xl">Set your budget cycle</h2>
-        <span className="text-sm text-muted-foreground">
-          Setting a cycle helps organize your budget
-        </span>
-      </div>
-      {showControls && (
-        <div className="flex w-full border border-b-0 rounded-t-lg">
-          <div className="flex-[0.9] flex items-center gap-3 p-4 border border-t-0 border-l-0 border-b-0">
-            {onMaxCyclesChange && (
-              <label className="flex items-center gap-2 text-sm">
-                <span>Number of cycles</span>
-                <input
-                  type="number"
-                  min={1}
-                  value={maxCycles}
-                  onChange={(e) =>
-                    handleMaxCyclesChangeInternal(parseInt(e.target.value, 10))
-                  }
-                  className="w-16 rounded border px-2 py-1"
-                />
-              </label>
-            )}
-            <span className="text-xs text-muted-foreground">
-              {cycles.length}/{maxCycles} selected
-            </span>
-            {showReset && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={handleReset}
-                className="ml-auto cursor-pointer"
-              >
-                Reset
-              </Button>
-            )}
-          </div>
-          <div className="flex-[0.1] p-4">
-            <Button
-              type="button"
-              variant="secondary"
-              // onClick={handleReset}
-              className="ml-auto cursor-pointer"
-            >
-              Save
-            </Button>
-          </div>
-        </div>
-      )}
-      <Calendar
-        hideNavigation={hideNavigation}
-        modifiers={{
-          range_start: rangeStart,
-          range_middle: rangeMiddle,
-          range_end: rangeEnd,
-          ...colorModifiers,
-        }}
-        modifiersStyles={colorStyles}
-        onDayClick={handleDayClick}
-        numberOfMonths={numberOfMonths}
-        defaultMonth={defaultMonth}
-        className="border [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]"
-        components={{
-          Weekday: () => <td />,
-          MonthCaption: ({
-            displayIndex,
-            calendarMonth, // eslint-disable-line @typescript-eslint/no-unused-vars
-            ...divProps
-          }: {
-            calendarMonth: CalendarMonth;
-            displayIndex: number;
-          } & React.HTMLAttributes<HTMLDivElement>) => {
-            return (
-              <div {...divProps}>
-                {displayIndex === 0 ? captionCurrentLabel : captionNextLabel}
-              </div>
-            );
-          },
-        }}
+    <div className="flex flex-col gap-4">
+      <CycleChoiceCard
+        defaultValue={CycleChoises.MONTHLY}
+        value={cycleChoice}
+        onValueChange={(current) =>
+          current === CycleChoises.MONTHLY
+            ? setCycleChoice(CycleChoises.MONTHLY)
+            : setCycleChoice(CycleChoises.CUSTOM)
+        }
       />
-      {showLegend && cycles.length > 0 && (
-        <div
-          className={`w-full border border-t-0 p-4 flex items-center gap-3 text-sm" ${
-            cycles.length < 5 && "flex flex-wrap"
-          }`}
-        >
-          {cycles.map((r, i) => (
-            <div key={i} className="flex items-center gap-2 pr-4">
-              <span
-                className="inline-block size-3 rounded"
-                style={{ backgroundColor: palette[i % palette.length] }}
-              />
-              <span>
-                Cycle {i + 1}:{" "}
-                {r.from?.toLocaleDateString("en-US", { day: "numeric" })} —{" "}
-                {r.to?.toLocaleDateString("en-US", { day: "numeric" })}
+      {cycleChoice === CycleChoises.CUSTOM && (
+        <div>
+          <div className="flex w-full border rounded-t-xl">
+            <div className="flex-1 flex items-center gap-2 p-2">
+              {onMaxCyclesChange && (
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <span>Number of cycles</span>
+                  <Input
+                    type="number"
+                    min={2}
+                    value={maxCycles}
+                    onChange={(e) =>
+                      handleMaxCyclesChangeInternal(
+                        parseInt(e.target.value, 10)
+                      )
+                    }
+                    className="w-14 h-auto"
+                  />
+                </label>
+              )}
+              <span className="text-xs text-muted-foreground">
+                {cycles.length}/{maxCycles} selected
               </span>
+              {showReset && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleReset}
+                  size="sm"
+                  className="ml-auto"
+                >
+                  Reset
+                </Button>
+              )}
             </div>
-          ))}
+          </div>
+          <Calendar
+            hideNavigation={hideNavigation}
+            modifiers={{
+              range_start: rangeStart,
+              range_middle: rangeMiddle,
+              range_end: rangeEnd,
+              ...colorModifiers,
+            }}
+            modifiersStyles={colorStyles}
+            onDayClick={handleDayClick}
+            numberOfMonths={numberOfMonths}
+            defaultMonth={defaultMonth}
+            // [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]
+            className="border w-full"
+            components={{
+              Weekday: () => <td />,
+              MonthCaption: ({
+                displayIndex,
+                calendarMonth, // eslint-disable-line @typescript-eslint/no-unused-vars
+                ...divProps
+              }: {
+                calendarMonth: CalendarMonth;
+                displayIndex: number;
+              } & React.HTMLAttributes<HTMLDivElement>) => {
+                return (
+                  <div {...divProps}>
+                    {displayIndex === 0
+                      ? captionCurrentLabel
+                      : captionNextLabel}
+                  </div>
+                );
+              },
+            }}
+          />
+          {showLegend && cycles.length > 0 && (
+            <div
+              className={`w-full border border-t-0 p-4 flex items-center gap-2 text-sm" ${
+                cycles.length < 5 && "flex flex-wrap"
+              }`}
+            >
+              {cycles.map((r, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 font-medium text-sm"
+                >
+                  <div
+                    className="inline-block size-3 rounded"
+                    style={{ backgroundColor: palette[i % palette.length] }}
+                  />
+                  <span>
+                    Cycle {i + 1}:{" "}
+                    {r.from?.toLocaleDateString("en-US", { day: "numeric" })} —{" "}
+                    {r.to?.toLocaleDateString("en-US", { day: "numeric" })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
