@@ -25,13 +25,13 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.nextUrl));
   }
 
-  // 5. Redirect to /onboarding if the user is authenticated
+  // 5. Redirect to /budget if the user is authenticated
   if (
     isPublicRoute &&
     sessionCookie &&
-    !req.nextUrl.pathname.startsWith("/onboarding")
+    !req.nextUrl.pathname.startsWith("/budget")
   ) {
-    return NextResponse.redirect(new URL("/onboarding", req.nextUrl));
+    return NextResponse.redirect(new URL("/budget", req.nextUrl));
   }
 
   return NextResponse.next();
