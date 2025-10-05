@@ -1,5 +1,7 @@
 // import data from "./data.json"
 
+import { EmptyDashboard } from "@/components/empty-dashboard";
+
 export default async function Page() {
-  return <div>This is dashboard page</div>;
+  return <EmptyDashboard />;
 }
