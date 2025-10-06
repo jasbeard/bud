@@ -8,9 +8,7 @@ import {
 } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { CycleChoiceCard, CycleChoises } from "./cycle-choice-card";
 
 export type CycleSelectProps = {
@@ -20,15 +18,13 @@ export type CycleSelectProps = {
   onMaxCyclesChange?: (next: number) => void;
   defaultMonth?: Date;
   numberOfMonths?: number;
-  palette?: string[];
   hideNavigation?: boolean;
-  showControls?: boolean;
   showLegend?: boolean;
   showReset?: boolean;
-  label?: string;
   captionCurrentLabel?: string;
   captionNextLabel?: string;
   className?: string;
+  id?: string;
 };
 
 export function CycleSelect({
@@ -38,23 +34,13 @@ export function CycleSelect({
   onMaxCyclesChange,
   defaultMonth,
   numberOfMonths = 2,
-  palette = [
-    "#3b82f6", // blue-500
-    "#10b981", // emerald-500
-    "#f59e0b", // amber-500
-    "#ef4444", // red-500
-    "#8b5cf6", // violet-500
-    "#06b6d4", // cyan-500
-    "#84cc16", // lime-500
-  ],
   hideNavigation = true,
-  showControls = true,
   showLegend = true,
   showReset = true,
-  label = "Create your budget cycle",
   captionCurrentLabel = "Current month",
   captionNextLabel = "Next Month",
   className,
+  id,
 }: CycleSelectProps) {
   const [draftCycle, setDraftCycle] = React.useState<DateRange | undefined>();
 
@@ -121,56 +107,32 @@ export function CycleSelect({
     if (cycles.length > 0) onChange([]);
   }, [cycles.length, onChange]);
 
-  const { rangeStart, rangeMiddle, rangeEnd, colorModifiers, colorStyles } =
-    React.useMemo(() => {
-      const list: DateRange[] = draftCycle ? [...cycles, draftCycle] : cycles;
+  const { rangeStart, rangeMiddle, rangeEnd } = React.useMemo(() => {
+    const list: DateRange[] = draftCycle ? [...cycles, draftCycle] : cycles;
 
-      const startMatchers: Matcher[] = [];
-      const endMatchers: Matcher[] = [];
-      const middleMatchers: Matcher[] = [];
+    const startMatchers: Matcher[] = [];
+    const endMatchers: Matcher[] = [];
+    const middleMatchers: Matcher[] = [];
 
-      const colorModifiers: Record<string, Matcher | Matcher[]> = {};
-      const colorStyles: Record<string, React.CSSProperties> = {};
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i];
+      if (!r?.from) continue;
+      const from = r.from;
+      const to = r.to ?? r.from;
 
-      for (let i = 0; i < list.length; i++) {
-        const r = list[i];
-        if (!r?.from) continue;
-        const from = r.from;
-        const to = r.to ?? r.from;
-
-        startMatchers.push(from);
-        endMatchers.push(to);
-        if (to > from) {
-          middleMatchers.push({ after: from, before: to });
-        }
-
-        const startKey = `cycle${i}_start`;
-        const endKey = `cycle${i}_end`;
-        const middleKey = `cycle${i}_middle`;
-        colorModifiers[startKey] = from;
-        colorModifiers[endKey] = to;
-        if (to > from) {
-          colorModifiers[middleKey] = { after: from, before: to };
-        }
-
-        const color = palette[i % palette.length];
-        const base: React.CSSProperties = {
-          backgroundColor: color,
-          color: "#ffffff",
-        };
-        colorStyles[startKey] = base;
-        colorStyles[middleKey] = base;
-        colorStyles[endKey] = base;
+      startMatchers.push(from);
+      endMatchers.push(to);
+      if (to > from) {
+        middleMatchers.push({ after: from, before: to });
       }
+    }
 
-      return {
-        rangeStart: startMatchers,
-        rangeMiddle: middleMatchers,
-        rangeEnd: endMatchers,
-        colorModifiers,
-        colorStyles,
-      };
-    }, [cycles, draftCycle, palette]);
+    return {
+      rangeStart: startMatchers,
+      rangeMiddle: middleMatchers,
+      rangeEnd: endMatchers,
+    };
+  }, [cycles, draftCycle]);
 
   const handleMaxCyclesChangeInternal = React.useCallback(
     (value: number) => {
@@ -191,7 +153,8 @@ export function CycleSelect({
   >(CycleChoises.MONTHLY);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col gap-4 ${className || ""}`}>
+      {/* part1 */}
       <CycleChoiceCard
         defaultValue={CycleChoises.MONTHLY}
         value={cycleChoice}
@@ -237,6 +200,7 @@ export function CycleSelect({
               )}
             </div>
           </div>
+          {/* part3 */}
           <Calendar
             hideNavigation={hideNavigation}
             modifiers={{
@@ -271,20 +235,14 @@ export function CycleSelect({
             }}
           />
           {showLegend && cycles.length > 0 && (
+            // part4
             <div
               className={`w-full border border-t-0 p-4 flex items-center gap-2 text-sm" ${
                 cycles.length < 5 && "flex flex-wrap"
               }`}
             >
               {cycles.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 font-medium text-sm"
-                >
-                  <div
-                    className="inline-block size-3 rounded"
-                    style={{ backgroundColor: palette[i % palette.length] }}
-                  />
+                <div key={i} className="font-medium text-sm">
                   <span>
                     Cycle {i + 1}:{" "}
                     {r.from?.toLocaleDateString("en-US", { day: "numeric" })} —{" "}

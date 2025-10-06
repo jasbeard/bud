@@ -1,3 +1,6 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -18,6 +21,14 @@ import {
 } from "lucide-react";
 
 export function OnboardingPopover() {
+  const router = useRouter();
+
+  const handleSelectBudgetCycle = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("onboarding", "true");
+    router.push(url.pathname + url.search);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -64,7 +75,11 @@ export function OnboardingPopover() {
             </div>
             <div className="grid items-center">
               <Item variant="outline" size="sm" asChild>
-                <a href="#">
+                <Button
+                  variant="ghost"
+                  className="cursor-pointer h-auto justify-start"
+                  onClick={handleSelectBudgetCycle}
+                >
                   <ItemMedia>
                     <CircleDashedIcon className="size-5 text-muted-foreground" />
                   </ItemMedia>
@@ -74,7 +89,7 @@ export function OnboardingPopover() {
                   <ItemActions>
                     <ChevronRightIcon className="size-4" />
                   </ItemActions>
-                </a>
+                </Button>
               </Item>
             </div>
             <div className="grid items-center">

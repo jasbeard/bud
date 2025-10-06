@@ -140,10 +140,6 @@ export default function Page() {
                   onMaxCyclesChange={handleMaxCyclesChange}
                   defaultMonth={defaultMonth}
                   numberOfMonths={2}
-                  showControls
-                  // showLegend
-                  captionCurrentLabel="Current month"
-                  captionNextLabel="Next Month"
                 />
 
                 <CardFooter className="flex self-end justify-end p-0">

@@ -8,6 +8,7 @@ import {
   FieldTitle,
 } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 
 export enum CycleChoises {
   MONTHLY = "monthly",
@@ -24,12 +25,13 @@ export function CycleChoiceCard({
   defaultValue,
   value,
   onValueChange,
+  ...props
 }: CycleChoiceCardProps) {
   return (
     <div className="w-full">
       <FieldGroup>
         <FieldSet>
-          <FieldLabel>Budget cycle</FieldLabel>
+          <FieldLabel>Cycle</FieldLabel>
           <FieldDescription>
             Select a budget cycle to manage your money smarter.
           </FieldDescription>
