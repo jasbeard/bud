@@ -127,6 +127,13 @@
       "when": 1759152625888,
       "tag": "0017_narrow_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1759747660056,
+      "tag": "0018_remarkable_naoko",
+      "breakpoints": true
     }
   ]
 }
