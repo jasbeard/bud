@@ -2,14 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Form,
   FormControl,
   FormField,
@@ -17,15 +9,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { InputWithInfoTooltip } from "@/components/input-with-info-tooltip";
+import { CycleSelect } from "@/components/cycle-select";
+import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
 import * as React from "react";
 import { type DateRange } from "react-day-picker";
-import { Input } from "@/components/ui/input";
-import { MoveRight } from "lucide-react";
+import { MoveRight, CheckCircle, Circle, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { CycleSelect } from "@/components/cycle-select";
-import { InputWithInfoTooltip } from "@/components/input-with-info-tooltip";
 
 const formSchema = z.object({
   budgetspace: z
@@ -41,16 +34,30 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
+// Define onboarding steps
+const onboardingSteps = [
+  {
+    id: "budgetspace",
+    title: "Create Budgetspace",
+    description: "Set up your first budgetspace to organize your finances",
+  },
+  {
+    id: "cycle",
+    title: "Choose Budget Cycle",
+    description: "Select how often you want to track your budget",
+  },
+  {
+    id: "categories",
+    title: "Set Up Categories",
+    description: "Create spending categories for better organization",
+  },
+];
+
 export default function Page() {
+  const [currentStep, setCurrentStep] = React.useState(0);
+  const [completedSteps, setCompletedSteps] = React.useState<number[]>([]);
   const [maxCycles, setMaxCycles] = React.useState<number>(2);
   const [cycles, setCycles] = React.useState<DateRange[]>([]);
-
-  // Trim cycles if max is reduced
-  const handleMaxCyclesChange = React.useCallback((next: number) => {
-    const safe = Number.isFinite(next) ? Math.max(1, Math.floor(next)) : 1;
-    setMaxCycles(safe);
-    setCycles((prev) => (prev.length > safe ? prev.slice(0, safe) : prev));
-  }, []);
 
   const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
@@ -60,71 +67,55 @@ export default function Page() {
     },
   });
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      // For now, we'll use a mock user ID. In a real app, this would come from authentication
-      const mockUserId = "123e4567-e89b-12d3-a456-426614174000";
-
-      const response = await fetch("/api/budgetspaces", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.budgetspace,
-          userId: mockUserId,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create budgetspace");
+  const handleNext = async () => {
+    if (currentStep === 0) {
+      // Validate and submit budgetspace creation
+      const isValid = await form.trigger();
+      if (isValid) {
+        const data = form.getValues();
+        // Handle budgetspace creation logic here
+        console.log("Creating budgetspace:", data);
+        setCompletedSteps((prev) => [...prev, currentStep]);
+        setCurrentStep(1);
       }
-
-      const result = await response.json();
-      console.log("Budgetspace created:", result);
-
-      // Redirect to dashboard or next step
-      // router.push('/dashboard');
-    } catch (error) {
-      console.error("Error creating budgetspace:", error);
-      // Handle error (show toast, etc.)
+    } else if (currentStep === 1) {
+      // Handle cycle selection completion
+      setCompletedSteps((prev) => [...prev, currentStep]);
+      setCurrentStep(2);
+    } else {
+      // Complete onboarding
+      setCompletedSteps((prev) => [...prev, currentStep]);
+      console.log("Onboarding completed!");
     }
   };
-  return (
-    <div className="flex justify-center w-full h-dvh border border-red-300">
-      <div className="flex w-full max-w-[52%] border border-orange-300">
-        <div className="w-64">asd</div>
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Let&apos;s Get Started</CardTitle>
-            <CardDescription>
-              Name your Budgetspace and set your cycle to start.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="h-dvh">
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 0:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Create Budgetspace</h2>
+              <p className="text-muted-foreground">
+                Set up your first budgetspace to organize your finances and
+                start budgeting.
+              </p>
+            </div>
+
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
+              <form className="space-y-6">
                 <FormField
                   control={form.control}
                   name="budgetspace"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budgetspace</FormLabel>
+                      <FormLabel>Budgetspace Name</FormLabel>
                       <FormControl>
-                        {/* <Input
-                          placeholder="E.g. Household"
-                          {...field}
-                          className="w-80"
-                        /> */}
                         <InputWithInfoTooltip
-                          placeholder="Household"
+                          placeholder="e.g., Household"
                           type="text"
                           tooltipMessage="letters, numbers, spaces, hyphens, and underscores are okay"
-                          className="w-90"
+                          className="w-full"
                           {...field}
                         />
                       </FormControl>
@@ -132,32 +123,147 @@ export default function Page() {
                     </FormItem>
                   )}
                 />
-
-                <CycleSelect
-                  cycles={cycles}
-                  onChange={setCycles}
-                  maxCycles={maxCycles}
-                  onMaxCyclesChange={handleMaxCyclesChange}
-                  defaultMonth={defaultMonth}
-                  numberOfMonths={2}
-                />
-
-                <CardFooter className="flex self-end justify-end p-0">
-                  <Button
-                    type="submit"
-                    size="sm"
-                    variant="outline"
-                    className="cursor-pointer px-2 font-normal text-sm text-muted-foreground"
-                    disabled={form.formState.isSubmitting}
-                  >
-                    <div>Next</div>
-                    <MoveRight className="h-4 w-4" />
-                  </Button>
-                </CardFooter>
               </form>
             </Form>
-          </CardContent>
-        </Card>
+          </div>
+        );
+
+      case 1:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Choose Budget Cycle</h2>
+              <p className="text-muted-foreground">
+                Select how often you want to track and review your budget.
+              </p>
+            </div>
+
+            <CycleSelect
+              cycles={cycles}
+              onChange={setCycles}
+              maxCycles={maxCycles}
+              onMaxCyclesChange={setMaxCycles}
+              defaultMonth={defaultMonth}
+              numberOfMonths={2}
+            />
+          </div>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold">Set Up Categories</h2>
+              <p className="text-muted-foreground">
+                Create spending categories to organize your transactions.
+              </p>
+            </div>
+
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                Category setup coming soon...
+              </p>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-background">
+      {/* Left Panel - Steps Navigation */}
+      <div className="w-80 border-r bg-muted/30 p-6">
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-2xl font-bold">Budget Setup</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              Get started with bud by completing these essential steps. Make
+              sure to review your information carefully.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {onboardingSteps.map((step, index) => {
+              const isCompleted = completedSteps.includes(index);
+              const isCurrent = currentStep === index;
+
+              return (
+                <div key={step.id}>
+                  <Item
+                    variant={isCurrent ? "default" : "muted"}
+                    className={`cursor-pointer transition-colors ${
+                      isCurrent ? "bg-background shadow-sm" : ""
+                    }`}
+                  >
+                    <ItemMedia>
+                      {isCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : isCurrent ? (
+                        <Circle className="h-5 w-5 text-blue-500 fill-blue-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-gray-300" />
+                      )}
+                    </ItemMedia>
+                    <ItemContent>
+                      <ItemTitle
+                        className={
+                          isCurrent
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }
+                      >
+                        {step.title}
+                      </ItemTitle>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {step.description}
+                      </p>
+                    </ItemContent>
+                  </Item>
+                  {index < onboardingSteps.length - 1 && (
+                    <Separator className="ml-6 mt-2" />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-4">
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Need Help?
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Content */}
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 p-8">
+          <div className="max-w-2xl">{renderStepContent()}</div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="border-t p-6">
+          <div className="flex justify-between items-center max-w-2xl">
+            <Button
+              variant="ghost"
+              disabled={currentStep === 0}
+              onClick={() => setCurrentStep(currentStep - 1)}
+            >
+              Previous
+            </Button>
+
+            <Button onClick={handleNext} className="flex items-center gap-2">
+              {currentStep === onboardingSteps.length - 1
+                ? "Complete Setup"
+                : "Next Step"}
+              <MoveRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

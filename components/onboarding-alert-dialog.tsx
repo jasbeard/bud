@@ -125,7 +125,7 @@ export function OnboardingAlertDialog({
               </FieldLabel>
             </RadioGroup> */}
 
-            <CycleSelect
+            {/* <CycleSelect
               id="cycle"
               cycles={cycles}
               onChange={setCycles}
@@ -133,7 +133,7 @@ export function OnboardingAlertDialog({
               onMaxCyclesChange={handleMaxCyclesChange}
               defaultMonth={defaultMonth}
               numberOfMonths={2}
-            />
+            /> */}
           </Field>
         </FieldGroup>
         <AlertDialogFooter>
