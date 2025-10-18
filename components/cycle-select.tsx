@@ -6,6 +6,7 @@ import {
   type CalendarMonth,
   type Matcher,
 } from "react-day-picker";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,9 @@ export function CycleSelect({
   id,
 }: CycleSelectProps) {
   const [draftCycle, setDraftCycle] = React.useState<DateRange | undefined>();
+
+  // AutoAnimate hooks for smooth transitions
+  const [customCycleRef] = useAutoAnimate();
 
   // Helper to check if a date is in the current month (first month displayed)
   const isInCurrentMonth = React.useCallback(
@@ -153,7 +157,10 @@ export function CycleSelect({
   >(CycleChoises.MONTHLY);
 
   return (
-    <div className={`flex flex-col gap-4 ${className || ""}`}>
+    <div
+      ref={customCycleRef}
+      className={`flex flex-col gap-4 ${className || ""}`}
+    >
       {/* part1 */}
       <CycleChoiceCard
         defaultValue={CycleChoises.MONTHLY}
@@ -213,7 +220,7 @@ export function CycleSelect({
             numberOfMonths={numberOfMonths}
             defaultMonth={defaultMonth}
             // [--cell-size:--spacing(11)] md:[--cell-size:--spacing(12)]
-            className="border"
+            className="border [--cell-size:--spacing(6)] md:[--cell-size:--spacing(7.5)]"
             components={{
               Weekday: () => <td />,
               MonthCaption: ({
