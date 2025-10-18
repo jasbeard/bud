@@ -20,10 +20,11 @@ import {
   CircleDashedIcon,
 } from "lucide-react";
 import { usePagePath } from "@/lib/utils";
+import { AppPages } from "@/lib/types";
 
 export function OnboardingPopover() {
-  const path = usePagePath({ mode: "path" }) as string;
-  const exemptedPaths = ["/", "onboarding"];
+  const path = usePagePath({ mode: "path" }) as AppPages;
+  const exemptedPaths = [AppPages.HOME, AppPages.ONBOARDING];
 
   if (exemptedPaths.includes(path)) return null;
 
