@@ -19,8 +19,18 @@ import {
   CircleCheckIcon,
   CircleDashedIcon,
 } from "lucide-react";
+import { usePagePath } from "@/lib/utils";
 
 export function OnboardingPopover() {
+  const path = usePagePath({ mode: "path" }) as string;
+  const exemptedPaths = ["/", "onboarding"];
+
+  if (exemptedPaths.includes(path)) return null;
+
+  return <BaseOnboardingPopover />;
+}
+
+function BaseOnboardingPopover() {
   const router = useRouter();
 
   const handleSelectBudgetCycle = () => {
