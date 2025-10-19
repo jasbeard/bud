@@ -19,6 +19,7 @@ import { MoveRight, CheckCircle, Circle, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { authClient } from "@/lib/auth-client";
 
 const formSchema = z.object({
   budgetspace: z
@@ -58,6 +59,9 @@ export default function Page() {
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([]);
   const [maxCycles, setMaxCycles] = React.useState<number>(2);
   const [cycles, setCycles] = React.useState<DateRange[]>([]);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [isCheckingExisting, setIsCheckingExisting] = React.useState(true);
 
   const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
@@ -67,14 +71,89 @@ export default function Page() {
     },
   });
 
+  // Check for existing budget spaces on component mount
+  React.useEffect(() => {
+    const checkExistingBudgetspaces = async () => {
+      try {
+        const session = await authClient.getSession();
+        if (!session?.data?.user?.id) {
+          setIsCheckingExisting(false);
+          return;
+        }
+
+        const response = await fetch("/api/budgetspaces");
+        if (response.ok) {
+          const budgetspace = await response.json();
+          // User already has a budget space, pre-populate with it
+          form.reset({ budgetspace: budgetspace.name });
+          // Mark step 0 as completed since they already have a budget space
+          setCompletedSteps([0]);
+          setCurrentStep(1); // Skip to next step
+        } else if (response.status === 404) {
+          // No budget space found, user needs to create one
+          // This is expected for new users, so we just continue
+        }
+      } catch (error) {
+        console.error("Error checking existing budgetspaces:", error);
+      } finally {
+        setIsCheckingExisting(false);
+      }
+    };
+
+    checkExistingBudgetspaces();
+  }, [form]);
+
   const handleNext = async () => {
     if (currentStep === 0) {
       // Validate and submit budgetspace creation
       const isValid = await form.trigger();
       if (isValid) {
-        const data = form.getValues();
-        // Handle budgetspace creation logic here
-        console.log("Creating budgetspace:", data);
+        // Only create budgetspace if form is dirty (values have changed)
+        if (form.formState.isDirty) {
+          setIsLoading(true);
+          setError(null);
+
+          try {
+            const data = form.getValues();
+
+            // Create budgetspace via API
+            const response = await fetch("/api/budgetspaces", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                name: data.budgetspace,
+              }),
+            });
+
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(
+                errorData.error || "Failed to create budgetspace"
+              );
+            }
+
+            const newBudgetspace = await response.json();
+            console.log("Budgetspace created:", newBudgetspace);
+
+            // Reset form to clean state with the created budget space name
+            form.reset({ budgetspace: data.budgetspace });
+          } catch (err) {
+            console.error("Error creating budgetspace:", err);
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Failed to create budgetspace"
+            );
+            setIsLoading(false);
+            return; // Don't proceed to next step if there's an error
+          } finally {
+            setIsLoading(false);
+          }
+        }
+
+        // Proceed to next step
         setCompletedSteps((prev) => [...prev, currentStep]);
         setCurrentStep(1);
       }
@@ -90,6 +169,20 @@ export default function Page() {
   };
 
   const renderStepContent = () => {
+    // Show loading state while checking for existing budget spaces
+    if (isCheckingExisting) {
+      return (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-2xl font-semibold">Loading...</h2>
+            <p className="text-muted-foreground">
+              Checking your existing budget spaces...
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentStep) {
       case 0:
         return (
@@ -101,6 +194,12 @@ export default function Page() {
                 start budgeting.
               </p>
             </div>
+
+            {error && (
+              <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                {error}
+              </div>
+            )}
 
             <Form {...form}>
               <form className="space-y-6">
@@ -115,7 +214,8 @@ export default function Page() {
                           placeholder="e.g., Household"
                           type="text"
                           tooltipMessage="letters, numbers, spaces, hyphens, and underscores are okay"
-                          className="w-full"
+                          className=" max-w-sm"
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -250,17 +350,28 @@ export default function Page() {
           <div className="flex justify-between items-center max-w-2xl">
             <Button
               variant="ghost"
-              disabled={currentStep === 0}
-              onClick={() => setCurrentStep(currentStep - 1)}
+              disabled={currentStep === 0 || isCheckingExisting}
+              onClick={() => {
+                setError(null); // Clear any errors when going back
+                setCurrentStep(currentStep - 1);
+              }}
             >
               Previous
             </Button>
 
-            <Button onClick={handleNext} className="flex items-center gap-2">
-              {currentStep === onboardingSteps.length - 1
+            <Button
+              onClick={handleNext}
+              className="flex items-center gap-2"
+              disabled={isLoading || isCheckingExisting}
+            >
+              {isCheckingExisting
+                ? "Loading..."
+                : isLoading
+                ? "Creating..."
+                : currentStep === onboardingSteps.length - 1
                 ? "Complete Setup"
                 : "Next Step"}
-              <MoveRight className="h-4 w-4" />
+              {!isLoading && <MoveRight className="h-4 w-4" />}
             </Button>
           </div>
         </div>
