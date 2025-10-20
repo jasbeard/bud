@@ -5,6 +5,7 @@ import {
   uuid,
   boolean,
   decimal,
+  integer,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -106,6 +107,35 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Budget cycles table
+export const budgetCycles = pgTable("budget_cycles", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  type: text("type", { enum: ["monthly", "custom"] }).notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  budgetspaceId: uuid("budgetspace_id")
+    .notNull()
+    .references(() => budgetspaces.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+// Budget cycle dates table (for custom cycles with multiple date ranges)
+export const budgetCycleDates = pgTable("budget_cycle_dates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  budgetCycleId: uuid("budget_cycle_id")
+    .notNull()
+    .references(() => budgetCycles.id, { onDelete: "cascade" }),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  startDate: integer("start_date").notNull(), // Calendar date as integer (e.g., 1-31)
+  endDate: integer("end_date").notNull(), // Calendar date as integer (e.g., 1-31)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
 // Budgets table
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -117,6 +147,9 @@ export const budgets = pgTable("budgets", {
   budgetspaceId: uuid("budgetspace_id")
     .notNull()
     .references(() => budgetspaces.id, { onDelete: "cascade" }),
+  budgetCycleId: uuid("budget_cycle_id").references(() => budgetCycles.id, {
+    onDelete: "cascade",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at"),
 });
@@ -126,6 +159,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   budgetspaces: many(budgetspaces),
   sessions: many(sessions),
   accounts: many(accounts),
+  budgetCycles: many(budgetCycles),
+  budgetCycleDates: many(budgetCycleDates),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -152,6 +187,7 @@ export const budgetspacesRelations = relations(
     categories: many(categories),
     transactions: many(transactions),
     budgets: many(budgets),
+    budgetCycles: many(budgetCycles),
   })
 );
 
@@ -175,6 +211,36 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
 }));
 
+export const budgetCyclesRelations = relations(
+  budgetCycles,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [budgetCycles.userId],
+      references: [users.id],
+    }),
+    budgetspace: one(budgetspaces, {
+      fields: [budgetCycles.budgetspaceId],
+      references: [budgetspaces.id],
+    }),
+    budgets: many(budgets),
+    dates: many(budgetCycleDates),
+  })
+);
+
+export const budgetCycleDatesRelations = relations(
+  budgetCycleDates,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [budgetCycleDates.userId],
+      references: [users.id],
+    }),
+    budgetCycle: one(budgetCycles, {
+      fields: [budgetCycleDates.budgetCycleId],
+      references: [budgetCycles.id],
+    }),
+  })
+);
+
 export const budgetsRelations = relations(budgets, ({ one }) => ({
   category: one(categories, {
     fields: [budgets.categoryId],
@@ -183,5 +249,9 @@ export const budgetsRelations = relations(budgets, ({ one }) => ({
   budgetspace: one(budgetspaces, {
     fields: [budgets.budgetspaceId],
     references: [budgetspaces.id],
+  }),
+  budgetCycle: one(budgetCycles, {
+    fields: [budgets.budgetCycleId],
+    references: [budgetCycles.id],
   }),
 }));
