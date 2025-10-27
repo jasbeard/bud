@@ -27,7 +27,6 @@ export default function Home() {
           onMaxCyclesChange={handleMaxCyclesChange}
           defaultMonth={defaultMonth}
           numberOfMonths={2}
-          showControls
           showLegend
           captionCurrentLabel="Current month"
           captionNextLabel="Next Month"
