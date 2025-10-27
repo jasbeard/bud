@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { budgetspaces } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 
@@ -28,12 +28,13 @@ export async function GET() {
 
     const userId = session.user.id;
 
-    // Get the first budgetspace for the user
+    // Get the user's default budgetspace
     const defaultBudgetspace = await db
       .select()
       .from(budgetspaces)
-      .where(eq(budgetspaces.userId, userId))
-      .orderBy(budgetspaces.createdAt)
+      .where(
+        and(eq(budgetspaces.userId, userId), eq(budgetspaces.isDefault, true))
+      )
       .limit(1);
 
     if (defaultBudgetspace.length === 0) {

@@ -14,7 +14,6 @@ import { CycleSelect } from "@/components/cycle-select";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
 import { Separator } from "@/components/ui/separator";
 import * as React from "react";
-import { type DateRange } from "react-day-picker";
 import { MoveRight, CheckCircle, Circle, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -31,6 +30,17 @@ const formSchema = z.object({
       /^[a-zA-Z0-9\s\-_]+$/,
       "Only letters, numbers, spaces, hyphens, and underscores are allowed"
     ),
+  cycles: z
+    .array(
+      z.object({
+        from: z.date(),
+        to: z.date().optional(),
+      })
+    )
+    .min(1, "At least one budget cycle is required")
+    .optional(),
+  maxCycles: z.number().min(1).max(12).optional(),
+  cycleType: z.enum(["monthly", "custom"]),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -57,8 +67,6 @@ const onboardingSteps = [
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(0);
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([]);
-  const [maxCycles, setMaxCycles] = React.useState<number>(2);
-  const [cycles, setCycles] = React.useState<DateRange[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isCheckingExisting, setIsCheckingExisting] = React.useState(true);
@@ -68,12 +76,15 @@ export default function Page() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       budgetspace: "",
+      cycles: [],
+      maxCycles: 2,
+      cycleType: "custom",
     },
   });
 
-  // Check for existing budget spaces on component mount
+  // Check for existing budget spaces and cycles on component mount
   React.useEffect(() => {
-    const checkExistingBudgetspaces = async () => {
+    const checkExistingData = async () => {
       try {
         const session = await authClient.getSession();
         if (!session?.data?.user?.id) {
@@ -81,90 +92,125 @@ export default function Page() {
           return;
         }
 
-        const response = await fetch("/api/budgetspaces");
-        if (response.ok) {
-          const budgetspace = await response.json();
+        // Check for existing budget spaces
+        const budgetspaceResponse = await fetch("/api/budgetspaces");
+        let budgetspaceExists = false;
+
+        if (budgetspaceResponse.ok) {
+          const budgetspace = await budgetspaceResponse.json();
           // User already has a budget space, pre-populate with it
-          form.reset({ budgetspace: budgetspace.name });
-          // Mark step 0 as completed since they already have a budget space
-          setCompletedSteps([0]);
-          setCurrentStep(1); // Skip to next step
-        } else if (response.status === 404) {
-          // No budget space found, user needs to create one
-          // This is expected for new users, so we just continue
+          form.reset({
+            budgetspace: budgetspace.name,
+            cycles: [],
+            maxCycles: 2,
+            cycleType: "custom",
+          });
+          budgetspaceExists = true;
+          setCompletedSteps((prev) => [...prev, 0]);
         }
+
+        // Check for existing budget cycles
+        const cyclesResponse = await fetch("/api/budgetcycles");
+        let cyclesExist = false;
+        if (cyclesResponse.ok) {
+          const existingCycles = await cyclesResponse.json();
+          if (existingCycles.length > 0) {
+            setCompletedSteps((prev) => [...prev, 1]);
+            cyclesExist = true;
+          }
+        }
+
+        // Determine which step to start on
+        if (budgetspaceExists && cyclesExist) {
+          setCurrentStep(2); // Skip to categories step
+        } else if (budgetspaceExists) {
+          setCurrentStep(1); // Skip to cycles step
+        }
+        // If budget space doesn't exist, stay on step 0
       } catch (error) {
-        console.error("Error checking existing budgetspaces:", error);
+        console.error("Error checking existing data:", error);
       } finally {
         setIsCheckingExisting(false);
       }
     };
 
-    checkExistingBudgetspaces();
+    checkExistingData();
   }, [form]);
 
   const handleNext = async () => {
-    if (currentStep === 0) {
-      // Validate and submit budgetspace creation
-      const isValid = await form.trigger();
+    if (currentStep < onboardingSteps.length - 1) {
+      // Validate current step
+      const fieldsToValidate =
+        currentStep === 0 ? ["budgetspace" as const] : ["cycles" as const];
+      const isValid = await form.trigger(fieldsToValidate);
+
       if (isValid) {
-        // Only create budgetspace if form is dirty (values have changed)
-        if (form.formState.isDirty) {
-          setIsLoading(true);
-          setError(null);
-
-          try {
-            const data = form.getValues();
-
-            // Create budgetspace via API
-            const response = await fetch("/api/budgetspaces", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                name: data.budgetspace,
-              }),
-            });
-
-            if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(
-                errorData.error || "Failed to create budgetspace"
-              );
-            }
-
-            const newBudgetspace = await response.json();
-            console.log("Budgetspace created:", newBudgetspace);
-
-            // Reset form to clean state with the created budget space name
-            form.reset({ budgetspace: data.budgetspace });
-          } catch (err) {
-            console.error("Error creating budgetspace:", err);
-            setError(
-              err instanceof Error
-                ? err.message
-                : "Failed to create budgetspace"
-            );
-            setIsLoading(false);
-            return; // Don't proceed to next step if there's an error
-          } finally {
-            setIsLoading(false);
-          }
-        }
-
-        // Proceed to next step
         setCompletedSteps((prev) => [...prev, currentStep]);
-        setCurrentStep(1);
+        setCurrentStep(currentStep + 1);
+        setError(null); // Clear any previous errors
       }
-    } else if (currentStep === 1) {
-      // Handle cycle selection completion
-      setCompletedSteps((prev) => [...prev, currentStep]);
-      setCurrentStep(2);
     } else {
-      // Complete onboarding
+      // Final step - submit all data
+      await handleCompleteOnboarding();
+    }
+  };
+
+  const handleCompleteOnboarding = async () => {
+    const isValid = await form.trigger();
+    if (!isValid) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = form.getValues();
+
+      // Convert cycles data to API format
+      const cycleDates =
+        formData.cycles?.map((cycle) => ({
+          startDate: cycle.from?.getDate() || 1,
+          endDate: cycle.to?.getDate() || 31,
+        })) || [];
+
+      const onboardingData = {
+        budgetspace: {
+          name: formData.budgetspace,
+        },
+        cycles: {
+          type: formData.cycleType,
+          dates: formData.cycleType === "custom" ? cycleDates : undefined,
+        },
+      };
+
+      const response = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(onboardingData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to complete onboarding");
+      }
+
+      const result = await response.json();
+      console.log("Onboarding completed:", result);
+
+      // Mark final step as completed
       setCompletedSteps((prev) => [...prev, currentStep]);
-      console.log("Onboarding completed!");
+
+      // Redirect to dashboard or next page
+      // You can add navigation logic here
+      console.log("Onboarding completed successfully!");
+    } catch (err) {
+      console.error("Error completing onboarding:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to complete onboarding"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -238,14 +284,38 @@ export default function Page() {
               </p>
             </div>
 
-            <CycleSelect
-              cycles={cycles}
-              onChange={setCycles}
-              maxCycles={maxCycles}
-              onMaxCyclesChange={setMaxCycles}
-              defaultMonth={defaultMonth}
-              numberOfMonths={2}
-            />
+            {error && (
+              <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+                {error}
+              </div>
+            )}
+
+            <Form {...form}>
+              <form className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="cycles"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budget Cycles</FormLabel>
+                      <FormControl>
+                        <CycleSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                          maxCycles={form.watch("maxCycles")}
+                          onMaxCyclesChange={(value) =>
+                            form.setValue("maxCycles", value)
+                          }
+                          defaultMonth={defaultMonth}
+                          numberOfMonths={2}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </form>
+            </Form>
           </div>
         );
 
@@ -367,7 +437,7 @@ export default function Page() {
               {isCheckingExisting
                 ? "Loading..."
                 : isLoading
-                ? "Creating..."
+                ? "Completing Setup..."
                 : currentStep === onboardingSteps.length - 1
                 ? "Complete Setup"
                 : "Next Step"}
