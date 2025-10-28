@@ -297,7 +297,6 @@ export default function Page() {
                   name="cycles"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Budget Cycles</FormLabel>
                       <FormControl>
                         <CycleSelect
                           value={field.value}
