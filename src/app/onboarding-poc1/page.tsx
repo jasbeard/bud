@@ -195,25 +195,29 @@ function InteractiveCycleTimeline({
     return diffDays + 1; // Inclusive
   }, []);
 
-  // Helper to find next available start day
+  // Helper to find next available start day (prevent day overlap in same month)
   const getNextAvailableStartDay = React.useCallback((): number => {
     if (cycles.length === 0) return 1;
 
-    // Find the latest end day
-    const latestEndDay = Math.max(
+    // Find the latest end day in the current month
+    // If a cycle ends on Day X in current month, next cycle must start on Day X+1 or later
+    const latestEndDayInCurrentMonth = Math.max(
       ...cycles.map((cycle) => {
         if (!cycle.from) return 0;
         if (!cycle.to) return cycle.from.getDate();
-        // Handle month-spanning cycles
-        if (cycle.to.getMonth() !== cycle.from.getMonth()) {
-          return daysInMonth; // If it spans months, consider it ends at month end
+        // Only consider cycles that end in the current month (not month-spanning)
+        if (cycle.to.getMonth() === cycle.from.getMonth()) {
+          return cycle.to.getDate();
         }
-        return cycle.to.getDate();
-      })
+        // Month-spanning cycles end in next month, so they don't block current month
+        return 0;
+      }),
+      0
     );
 
-    // Start after the latest cycle ends, or at day 1 if no cycles
-    return Math.min(latestEndDay + 1, daysInMonth);
+    // Start after the latest cycle ends in current month, or at day 1 if no cycles end in current month
+    // Add 1 to ensure no overlap: if last cycle ends on Day 24, next starts on Day 25
+    return Math.min(latestEndDayInCurrentMonth + 1, daysInMonth);
   }, [cycles, daysInMonth]);
 
   // Add a new cycle (default 5 days, starting from next available position)
@@ -238,7 +242,7 @@ function InteractiveCycleTimeline({
     onChange,
   ]);
 
-  // Adjust cycle length (minus button)
+  // Adjust cycle length (minus button) - supports month-spanning
   const handleDecreaseCycle = React.useCallback(
     (index: number) => {
       const cycle = cycles[index];
@@ -247,40 +251,97 @@ function InteractiveCycleTimeline({
       const currentLength = getCycleLength(cycle);
       if (currentLength <= 1) return; // Can't go below 1 day
 
-      const newLength = currentLength - 1;
-      const newEndDay = cycle.from.getDate() + newLength - 1;
-      const to = new Date(currentYear, currentMonth, newEndDay);
+      const isCurrentlySpanning =
+        cycle.to && cycle.to.getMonth() !== cycle.from.getMonth();
+      const startDay = cycle.from.getDate();
+      const currentEndDay = cycle.to ? cycle.to.getDate() : startDay;
+
+      let newEndDay: number;
+      let isNextMonth: boolean;
+
+      if (isCurrentlySpanning) {
+        // Currently spanning months
+        if (currentEndDay > 1) {
+          // Decrease in next month
+          newEndDay = currentEndDay - 1;
+          isNextMonth = true;
+        } else {
+          // Move back to current month at the end
+          newEndDay = daysInMonth;
+          isNextMonth = false;
+        }
+      } else {
+        // Currently in same month
+        newEndDay = Math.max(startDay, currentEndDay - 1);
+        isNextMonth = false;
+      }
+
+      const to = isNextMonth
+        ? new Date(currentYear, currentMonth + 1, newEndDay)
+        : new Date(currentYear, currentMonth, newEndDay);
 
       const newCycles = [...cycles];
       newCycles[index] = { from: cycle.from, to };
       onChange(newCycles);
     },
-    [cycles, getCycleLength, currentYear, currentMonth, onChange]
+    [cycles, getCycleLength, daysInMonth, currentYear, currentMonth, onChange]
   );
 
-  // Adjust cycle length (plus button)
+  // Adjust cycle length (plus button) - supports month-spanning
   const handleIncreaseCycle = React.useCallback(
     (index: number) => {
       const cycle = cycles[index];
       if (!cycle.from) return;
 
+      const isCurrentlySpanning =
+        cycle.to && cycle.to.getMonth() !== cycle.from.getMonth();
       const currentEndDay = cycle.to
         ? cycle.to.getDate()
         : cycle.from.getDate();
+      const daysInNextMonth = new Date(
+        currentYear,
+        currentMonth + 2,
+        0
+      ).getDate();
 
-      // Check if we can extend without overlapping next cycle
-      const nextCycle = cycles[index + 1];
-      let maxEndDay = daysInMonth;
+      let newEndDay: number;
+      let isNextMonth = isCurrentlySpanning;
 
-      if (nextCycle?.from) {
-        const nextStartDay = nextCycle.from.getDate();
-        maxEndDay = nextStartDay - 1; // Can't overlap with next cycle
+      if (isCurrentlySpanning) {
+        // Already spanning months - extend in next month
+        newEndDay = Math.min(currentEndDay + 1, daysInNextMonth);
+        isNextMonth = true;
+      } else {
+        // Currently in same month
+        if (currentEndDay >= daysInMonth) {
+          // Can't extend further in current month, move to next month
+          newEndDay = 1;
+          isNextMonth = true;
+        } else {
+          // Check for overlap with next cycle in same month
+          const nextCycle = cycles[index + 1];
+          let maxEndDay = daysInMonth;
+
+          if (nextCycle?.from && nextCycle.from.getMonth() === currentMonth) {
+            // Next cycle starts in current month - prevent overlap
+            const nextStartDay = nextCycle.from.getDate();
+            maxEndDay = nextStartDay - 1;
+          }
+
+          newEndDay = Math.min(currentEndDay + 1, maxEndDay);
+          isNextMonth = false;
+
+          // If we hit the limit and can't extend in current month, move to next month
+          if (newEndDay >= daysInMonth && currentEndDay < daysInMonth) {
+            newEndDay = 1;
+            isNextMonth = true;
+          }
+        }
       }
 
-      if (currentEndDay >= maxEndDay) return; // Can't extend further
-
-      const newEndDay = Math.min(currentEndDay + 1, maxEndDay);
-      const to = new Date(currentYear, currentMonth, newEndDay);
+      const to = isNextMonth
+        ? new Date(currentYear, currentMonth + 1, newEndDay)
+        : new Date(currentYear, currentMonth, newEndDay);
 
       const newCycles = [...cycles];
       newCycles[index] = { from: cycle.from, to };
@@ -307,17 +368,25 @@ function InteractiveCycleTimeline({
       // Validate: must be between 1 and daysInMonth
       const validStartDay = Math.max(1, Math.min(newStartDay, daysInMonth));
 
-      // Validate: must be before end day
+      // Validate: must be before end day (within same month)
       const currentEndDay = cycle.to
         ? cycle.to.getDate()
         : cycle.from.getDate();
-      if (validStartDay >= currentEndDay) return;
+      const isEndInNextMonth =
+        cycle.to && cycle.to.getMonth() !== cycle.from.getMonth();
 
-      // Check for overlap with previous cycle
+      // If end is in current month, start must be before end
+      if (!isEndInNextMonth && validStartDay >= currentEndDay) return;
+
+      // Check for overlap with previous cycle (only within same month)
       const prevCycle = cycles[index - 1];
-      if (prevCycle?.to) {
+      if (prevCycle?.from && prevCycle?.to) {
         const prevEndDay = prevCycle.to.getDate();
-        if (validStartDay <= prevEndDay) return;
+        const prevIsNextMonth =
+          prevCycle.to.getMonth() !== prevCycle.from.getMonth();
+
+        // Only prevent overlap if both cycles are in the same month
+        if (!prevIsNextMonth && validStartDay <= prevEndDay) return;
       }
 
       const from = new Date(currentYear, currentMonth, validStartDay);
@@ -330,28 +399,62 @@ function InteractiveCycleTimeline({
     [cycles, daysInMonth, currentYear, currentMonth, onChange]
   );
 
-  // Update cycle end day
+  // Update cycle end day (can be in next month if < startDay)
   const handleUpdateEndDay = React.useCallback(
     (index: number, newEndDay: number) => {
       const cycle = cycles[index];
       if (!cycle.from) return;
 
-      // Validate: must be between 1 and daysInMonth
-      const validEndDay = Math.max(1, Math.min(newEndDay, daysInMonth));
-
-      // Validate: must be after start day
       const currentStartDay = cycle.from.getDate();
-      if (validEndDay <= currentStartDay) return;
+      const daysInNextMonth = new Date(
+        currentYear,
+        currentMonth + 2,
+        0
+      ).getDate();
 
-      // Check for overlap with next cycle
+      // Determine if this is a next-month day or current-month day
+      let validEndDay: number;
+      let isNextMonth = false;
+
+      if (newEndDay < currentStartDay && newEndDay <= daysInMonth) {
+        // End day is less than start day - this means it's in the next month
+        isNextMonth = true;
+        validEndDay = Math.max(1, Math.min(newEndDay, daysInNextMonth));
+      } else {
+        // End day is in current month
+        validEndDay = Math.max(1, Math.min(newEndDay, daysInMonth));
+        // But if it's less than start day, it's actually next month
+        if (validEndDay < currentStartDay) {
+          isNextMonth = true;
+          validEndDay = Math.max(1, Math.min(newEndDay, daysInNextMonth));
+        }
+      }
+
+      // Validate: prevent day overlap within same month, but allow month-spanning
+      // If end is in current month, it must be after start day
+      if (!isNextMonth) {
+        const currentStartDay = cycle.from.getDate();
+        if (validEndDay <= currentStartDay) return;
+      }
+
+      // Check for overlap with next cycle (only within same month)
       const nextCycle = cycles[index + 1];
       if (nextCycle?.from) {
         const nextStartDay = nextCycle.from.getDate();
-        if (validEndDay >= nextStartDay) return;
+        const nextIsNextMonth = nextCycle.from.getMonth() !== currentMonth;
+
+        // Only prevent overlap if both cycles are in the same month
+        if (!isNextMonth && !nextIsNextMonth && validEndDay >= nextStartDay)
+          return;
+        // If our end is in next month and next cycle starts in next month, prevent overlap
+        if (isNextMonth && nextIsNextMonth && validEndDay >= nextStartDay)
+          return;
       }
 
       const from = cycle.from;
-      const to = new Date(currentYear, currentMonth, validEndDay);
+      const to = isNextMonth
+        ? new Date(currentYear, currentMonth + 1, validEndDay)
+        : new Date(currentYear, currentMonth, validEndDay);
 
       const newCycles = [...cycles];
       newCycles[index] = { from, to };
@@ -360,31 +463,116 @@ function InteractiveCycleTimeline({
     [cycles, daysInMonth, currentYear, currentMonth, onChange]
   );
 
-  // Create visual representation of cycles for timeline preview
-  const cycleBars = React.useMemo(() => {
-    return cycles.map((cycle, index) => {
-      if (!cycle.from) return null;
-      const startDay = cycle.from.getDate();
-      const endDay = cycle.to ? cycle.to.getDate() : startDay;
-      const width = ((endDay - startDay + 1) / daysInMonth) * 100;
-      const left = ((startDay - 1) / daysInMonth) * 100;
+  // Create visual representation of cycles for timeline preview (two months)
+  const { currentMonthBars, nextMonthBars, spanningBars, hasMonthSpanning } =
+    React.useMemo(() => {
+      const daysInNextMonth = new Date(
+        currentYear,
+        currentMonth + 2,
+        0
+      ).getDate();
+      const currentBars: React.ReactNode[] = [];
+      const nextBars: React.ReactNode[] = [];
+      const spanningBarsList: React.ReactNode[] = [];
+      let hasSpanning = false;
 
-      return (
-        <div
-          key={index}
-          className="absolute h-8 rounded-md border bg-primary/20 border-primary/40 flex items-center justify-center text-xs font-medium text-primary"
-          style={{
-            left: `${left}%`,
-            width: `${width}%`,
-          }}
-        >
-          <span className="truncate px-1">
-            {startDay}-{endDay}
-          </span>
-        </div>
-      );
-    });
-  }, [cycles, daysInMonth]);
+      cycles.forEach((cycle, index) => {
+        if (!cycle.from) return;
+        const startDay = cycle.from.getDate();
+        const endDay = cycle.to ? cycle.to.getDate() : startDay;
+        const isSpanningMonths =
+          cycle.to && cycle.to.getMonth() !== cycle.from.getMonth();
+
+        if (isSpanningMonths) {
+          hasSpanning = true;
+        }
+
+        if (isSpanningMonths) {
+          // Cycle spans both months - create two connected bars
+          const daysInCurrentMonth = new Date(
+            currentYear,
+            currentMonth + 1,
+            0
+          ).getDate();
+          const daysFromStart = daysInCurrentMonth - startDay + 1;
+
+          // Current month portion
+          const currentWidth = (daysFromStart / daysInMonth) * 100;
+          const currentLeft = ((startDay - 1) / daysInMonth) * 100;
+
+          // Next month portion
+          const nextWidth = (endDay / daysInNextMonth) * 100;
+          const nextLeft = 0;
+
+          currentBars.push(
+            <div
+              key={`current-${index}`}
+              className="absolute h-8 rounded-l-md border-l border-t border-b bg-primary/20 border-primary/40 flex items-center justify-center text-xs font-medium text-primary"
+              style={{
+                left: `${currentLeft}%`,
+                width: `${currentWidth}%`,
+              }}
+            >
+              <span className="truncate px-1">{startDay}</span>
+            </div>
+          );
+
+          nextBars.push(
+            <div
+              key={`next-${index}`}
+              className="absolute h-8 rounded-r-md border-r border-t border-b bg-primary/20 border-primary/40 flex items-center justify-center text-xs font-medium text-primary"
+              style={{
+                left: `${nextLeft}%`,
+                width: `${nextWidth}%`,
+              }}
+            >
+              <span className="truncate px-1">{endDay}</span>
+            </div>
+          );
+
+          // Add a visual connector indicator (shown as a small arrow/line)
+          // This will be positioned at the end of current month bar
+          spanningBarsList.push(
+            <div
+              key={`span-${index}`}
+              className="absolute top-1/2 -translate-y-1/2 flex items-center"
+              style={{
+                left: `${currentLeft + currentWidth}%`,
+              }}
+            >
+              <div className="h-0.5 w-2 bg-primary/40" />
+              <div className="w-0 h-0 border-l-[4px] border-l-primary/40 border-t-[3px] border-t-transparent border-b-[3px] border-b-transparent" />
+            </div>
+          );
+        } else {
+          // Cycle is only in current month
+          const width = ((endDay - startDay + 1) / daysInMonth) * 100;
+          const left = ((startDay - 1) / daysInMonth) * 100;
+
+          currentBars.push(
+            <div
+              key={`current-${index}`}
+              className="absolute h-8 rounded-md border bg-primary/20 border-primary/40 flex items-center justify-center text-xs font-medium text-primary"
+              style={{
+                left: `${left}%`,
+                width: `${width}%`,
+              }}
+            >
+              <span className="truncate px-1">
+                {startDay}-{endDay}
+              </span>
+            </div>
+          );
+        }
+      });
+
+      return {
+        currentMonthBars: currentBars,
+        nextMonthBars: nextBars,
+        spanningBars: spanningBarsList,
+        hasMonthSpanning: hasSpanning,
+      };
+    }, [cycles, daysInMonth, currentYear, currentMonth]);
 
   return (
     <div className="space-y-4">
@@ -392,7 +580,9 @@ function InteractiveCycleTimeline({
         <div>
           <h3 className="text-sm font-medium mb-1">Create your cycles</h3>
           <p className="text-xs text-muted-foreground">
-            Add cycles and adjust their length using the buttons below.
+            Add cycles and adjust their length using the buttons below. To span
+            into the next month, set the end day to a number less than the start
+            day (e.g., Day 25-9 spans from Day 25 to Day 9 of next month).
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -436,6 +626,13 @@ function InteractiveCycleTimeline({
             if (!cycle.from) return null;
             const startDay = cycle.from.getDate();
             const endDay = cycle.to ? cycle.to.getDate() : startDay;
+            const isSpanningMonths =
+              cycle.to && cycle.to.getMonth() !== cycle.from.getMonth();
+            const daysInNextMonth = new Date(
+              currentYear,
+              currentMonth + 2,
+              0
+            ).getDate();
             const length = getCycleLength(cycle);
 
             return (
@@ -457,11 +654,11 @@ function InteractiveCycleTimeline({
 
                 {/* Cycle representation with editable inputs */}
                 <div className="flex-1 flex items-center justify-center gap-2">
-                  <div className="text-center">
+                  <div className="text-center w-full">
                     <div className="text-xs text-muted-foreground mb-1">
                       Cycle {index + 1}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 justify-center pb-4">
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-muted-foreground">
                           Day
@@ -485,19 +682,39 @@ function InteractiveCycleTimeline({
                         <span className="text-xs text-muted-foreground">
                           Day
                         </span>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={daysInMonth}
-                          value={endDay}
-                          onChange={(e) => {
-                            const value = parseInt(e.target.value, 10);
-                            if (!isNaN(value)) {
-                              handleUpdateEndDay(index, value);
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min={1}
+                            max={
+                              isSpanningMonths ? daysInNextMonth : daysInMonth
                             }
-                          }}
-                          className="w-16 h-7 text-sm text-center font-medium"
-                        />
+                            value={endDay}
+                            onChange={(e) => {
+                              const value = parseInt(e.target.value, 10);
+                              if (!isNaN(value)) {
+                                handleUpdateEndDay(index, value);
+                              }
+                            }}
+                            placeholder={
+                              isSpanningMonths ? "Next month" : "End day"
+                            }
+                            className="w-16 h-7 text-sm text-center font-medium"
+                          />
+                          {!isSpanningMonths && endDay >= startDay && (
+                            <span
+                              className="absolute -bottom-4 left-0 right-0 text-[10px] text-muted-foreground whitespace-nowrap"
+                              title="Enter a number less than start day to span to next month"
+                            >
+                              Tip: &lt;{startDay} = next month
+                            </span>
+                          )}
+                        </div>
+                        {isSpanningMonths && (
+                          <span className="text-xs text-muted-foreground">
+                            (next month)
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
@@ -533,7 +750,7 @@ function InteractiveCycleTimeline({
         </div>
       )}
 
-      {/* Timeline preview */}
+      {/* Timeline preview - two months */}
       {cycles.length > 0 && (
         <div className="p-4 border rounded-lg bg-muted/30">
           <div className="mb-3">
@@ -542,12 +759,39 @@ function InteractiveCycleTimeline({
               Timeline Preview
             </h4>
           </div>
-          <div className="relative h-8 bg-background rounded border">
-            {cycleBars}
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground px-1 mt-2">
-            <span>Day 1</span>
-            <span>Day {daysInMonth}</span>
+          <div className="space-y-3">
+            {/* Current Month */}
+            <div>
+              <div className="text-xs text-muted-foreground mb-1.5">
+                Current Month
+              </div>
+              <div className="relative h-8 bg-background rounded border">
+                {currentMonthBars}
+                {hasMonthSpanning && spanningBars}
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground px-1 mt-1">
+                <span>Day 1</span>
+                <span>Day {daysInMonth}</span>
+              </div>
+            </div>
+
+            {/* Next Month - only show if cycles span into next month */}
+            {hasMonthSpanning && (
+              <div>
+                <div className="text-xs text-muted-foreground mb-1.5">
+                  Next Month
+                </div>
+                <div className="relative h-8 bg-background rounded border">
+                  {nextMonthBars}
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground px-1 mt-1">
+                  <span>Day 1</span>
+                  <span>
+                    Day {new Date(currentYear, currentMonth + 2, 0).getDate()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
