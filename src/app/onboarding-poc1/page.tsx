@@ -39,11 +39,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
-import { type DateRange } from "react-day-picker";
+
 import {
   InteractiveCycleTimeline,
   CycleTimelinePreview,
 } from "@/components/cycle-timeline";
+import { CyclePreset, presetToDateRanges } from "@/lib/utils";
 
 const formSchema = z.object({
   budgetspace: z
@@ -78,7 +79,7 @@ const onboardingSteps = [
     description: "Set up your first budgetspace to organize your finances",
   },
   {
-    id: "cycle",
+    id: "budgetcycle",
     title: "Choose Budget Cycle",
     description: "Select how often you want to track your budget",
   },
@@ -88,15 +89,6 @@ const onboardingSteps = [
     description: "Create spending categories for better organization",
   },
 ];
-
-// Preset cycle templates
-type CyclePreset = {
-  name: string;
-  description: string;
-  icon?: string;
-  type: "monthly" | "preset" | "custom";
-  cycles?: Array<{ startDay: number; endDay: number }>;
-};
 
 const cyclePresets: CyclePreset[] = [
   {
@@ -144,39 +136,6 @@ const cyclePresets: CyclePreset[] = [
     type: "custom",
   },
 ];
-
-// Helper to convert preset to DateRange
-function presetToDateRanges(preset: CyclePreset, baseDate: Date): DateRange[] {
-  if (preset.type === "monthly") {
-    // Monthly: 1st to last day of month
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth();
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    return [
-      {
-        from: new Date(year, month, 1),
-        to: new Date(year, month, lastDay),
-      },
-    ];
-  }
-
-  if (preset.type === "preset" && preset.cycles) {
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth();
-
-    return preset.cycles.map((cycle) => {
-      const from = new Date(year, month, cycle.startDay);
-      const to = new Date(year, month, cycle.endDay);
-      // Handle end of month edge cases
-      if (to.getMonth() !== month) {
-        to.setDate(0); // Last day of the month
-      }
-      return { from, to };
-    });
-  }
-
-  return [];
-}
 
 export default function Page() {
   const [currentStep, setCurrentStep] = React.useState(0);
