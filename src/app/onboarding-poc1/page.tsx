@@ -10,8 +10,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { InputWithInfoTooltip } from "@/components/input-with-info-tooltip";
-import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
-import { Separator } from "@/components/ui/separator";
+import {
+  Stepper,
+  StepperList,
+  StepperItem,
+  StepperTrigger,
+  StepperIndicator,
+  StepperContent,
+  StepperTitle,
+  StepperDescription,
+  StepperSeparator,
+} from "@/components/ui/stepper";
 import {
   Card,
   CardContent,
@@ -25,14 +34,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import * as React from "react";
-import {
-  MoveRight,
-  CheckCircle,
-  Circle,
-  HelpCircle,
-  Info,
-  ChevronDown,
-} from "lucide-react";
+import { MoveRight, HelpCircle, Info, ChevronDown } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -501,8 +503,7 @@ export default function Page() {
                           <div className="space-y-3">
                             <div>
                               <p className="text-xs text-muted-foreground mb-3">
-                                Select a preset or create your own custom
-                                cycles.
+                                Select a preset or create your own cycles.
                               </p>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                 {cyclePresets.map((preset) => {
@@ -593,81 +594,84 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Left Panel - Steps Navigation */}
-      <div className="w-80 border-r bg-muted/30 p-6">
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold">Budget Setup</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Get started with bud by completing these essential steps. Make
-              sure to review your information carefully.
+    <div className="flex flex-col h-screen bg-background">
+      {/* Header with Title and Help */}
+      <div className="border-b bg-muted/30 px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between max-w-4xl mx-auto gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold">Budget Setup</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+              Get started with bud by completing these essential steps.
             </p>
           </div>
-
-          <div className="space-y-4">
-            {onboardingSteps.map((step, index) => {
-              const isCompleted = completedSteps.includes(index);
-              const isCurrent = currentStep === index;
-
-              return (
-                <div key={step.id}>
-                  <Item
-                    variant={isCurrent ? "default" : "muted"}
-                    className={`cursor-pointer transition-colors ${
-                      isCurrent ? "bg-background shadow-sm" : ""
-                    }`}
-                  >
-                    <ItemMedia>
-                      {isCompleted ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : isCurrent ? (
-                        <Circle className="h-5 w-5 text-blue-500 fill-blue-500" />
-                      ) : (
-                        <Circle className="h-5 w-5 text-gray-300" />
-                      )}
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle
-                        className={
-                          isCurrent
-                            ? "text-foreground"
-                            : "text-muted-foreground"
-                        }
-                      >
-                        {step.title}
-                      </ItemTitle>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {step.description}
-                      </p>
-                    </ItemContent>
-                  </Item>
-                  {index < onboardingSteps.length - 1 && (
-                    <Separator className="ml-6 mt-2" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="pt-4">
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              <HelpCircle className="h-4 w-4 mr-2" />
-              Need Help?
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground shrink-0"
+          >
+            <HelpCircle className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Need Help?</span>
+          </Button>
         </div>
       </div>
 
-      {/* Right Panel - Content */}
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 p-8">
-          <div className="max-w-2xl">{renderStepContent()}</div>
+      {/* Stepper Navigation */}
+      <div className="border-b bg-background px-4 sm:px-6 py-3 sm:py-4 overflow-x-auto">
+        <div className="max-w-4xl mx-auto min-w-0">
+          <Stepper
+            activeStep={currentStep}
+            onStepChange={(step) => {
+              // Only allow navigation to completed steps or the next step
+              if (completedSteps.includes(step) || step === currentStep + 1) {
+                setError(null);
+                setCurrentStep(step);
+              }
+            }}
+            orientation="horizontal"
+            className="w-full"
+          >
+            <StepperList className="w-full">
+              {onboardingSteps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <StepperItem>
+                    <StepperTrigger
+                      disabled={
+                        !completedSteps.includes(index) &&
+                        index !== currentStep &&
+                        index !== currentStep + 1
+                      }
+                    >
+                      <StepperIndicator
+                        size="sm"
+                        showCheck={completedSteps.includes(index)}
+                      />
+                      <StepperContent>
+                        <StepperTitle className="text-xs sm:text-sm">
+                          {step.title}
+                        </StepperTitle>
+                        <StepperDescription className="hidden sm:block text-xs">
+                          {step.description}
+                        </StepperDescription>
+                      </StepperContent>
+                    </StepperTrigger>
+                  </StepperItem>
+                  {index < onboardingSteps.length - 1 && <StepperSeparator />}
+                </React.Fragment>
+              ))}
+            </StepperList>
+          </Stepper>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 p-6 sm:p-8">
+          <div className="max-w-2xl mx-auto w-full">{renderStepContent()}</div>
         </div>
 
         {/* Bottom Navigation */}
-        <div className="border-t p-6">
-          <div className="flex justify-between items-center max-w-2xl">
+        <div className="border-t p-4 sm:p-6 bg-background">
+          <div className="flex justify-between items-center max-w-2xl mx-auto w-full">
             <Button
               variant="ghost"
               disabled={currentStep === 0 || isCheckingExisting}

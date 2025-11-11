@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sparkles } from "lucide-react";
 import { type DateRange } from "react-day-picker";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 // Interactive timeline for creating custom cycles
 export function InteractiveCycleTimeline({
@@ -414,37 +419,75 @@ export function InteractiveCycleTimeline({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
-          <h3 className="text-sm font-medium mb-1">Create your cycles</h3>
-          <p className="text-xs text-muted-foreground">
-            Add cycles and adjust their length using the buttons below. To span
-            into the next month, set the end day to a number less than the start
-            day (e.g., Day 25-9 spans from Day 25 to Day 9 of next month).
-          </p>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-medium mb-1">Create custom cycles</h3>
+            <span>
+              <HoverCard>
+                <HoverCardTrigger asChild>
+                  <button
+                    type="button"
+                    tabIndex={0}
+                    className="ml-1 group rounded-full p-0.5 hover:bg-muted transition"
+                    aria-label="How to span months"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-help-circle w-4 h-4 text-muted-foreground"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M8.5 9.5a3.5 3.5 0 0 1 7 0c0 1.5-2 2.5-2 2.5" />
+                      <path d="M12 17h.01" />
+                    </svg>
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent side="top" className="w-56 text-xs">
+                  Add and customize cycles below.
+                  <br />
+                  <strong>To span months:</strong> Set the end day{" "}
+                  <em>before</em> the start day.
+                  <br />
+                  <span className="text-muted-foreground">
+                    (e.g., 25-9 goes from day 25 to day 9 next month)
+                  </span>
+                </HoverCardContent>
+              </HoverCard>
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          {onMaxCyclesChange && (
-            <label className="flex items-center gap-2 text-sm font-medium">
-              <span>Max cycles:</span>
-              <Input
-                type="number"
-                min={1}
-                max={12}
-                value={maxCycles}
-                onChange={(e) => {
-                  const value = parseInt(e.target.value, 10);
-                  if (!isNaN(value) && value >= 1 && value <= 12) {
-                    onMaxCyclesChange(value);
-                  }
-                }}
-                className="w-16 h-auto"
-              />
-            </label>
-          )}
-          <span className="text-xs text-muted-foreground">
-            {cycles.length}/{maxCycles} cycles
-          </span>
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-4 md:gap-2">
+            {onMaxCyclesChange && (
+              <label className="flex items-center gap-2 text-sm font-medium">
+                <span>Max cycles:</span>
+                <Input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={maxCycles}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    if (!isNaN(value) && value >= 1 && value <= 12) {
+                      onMaxCyclesChange(value);
+                    }
+                  }}
+                  className="w-16 h-auto"
+                />
+              </label>
+            )}
+            <span className="text-xs text-muted-foreground">
+              {cycles.length}/{maxCycles} cycles
+            </span>
+          </div>
           <Button
             type="button"
             variant="default"
