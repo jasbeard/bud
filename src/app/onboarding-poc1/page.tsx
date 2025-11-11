@@ -20,6 +20,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import * as React from "react";
 import {
   MoveRight,
@@ -28,6 +33,7 @@ import {
   HelpCircle,
   Info,
   Sparkles,
+  ChevronDown,
 } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -1138,29 +1144,42 @@ export default function Page() {
             </div>
 
             {/* Enhanced explanation card */}
-            <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  What is a budget cycle?
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <CardDescription className="text-sm">
-                  A budget cycle is the period you track your spending. Most
-                  people use monthly cycles, but you might need custom cycles if
-                  you:
-                </CardDescription>
-                <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside ml-2">
-                  <li>Get paid bi-weekly and want cycles aligned to paydays</li>
-                  <li>Have multiple income sources with different schedules</li>
-                  <li>
-                    Want overlapping cycles (e.g., rent cycle vs. spending
-                    cycle)
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+            <Collapsible defaultOpen={false}>
+              <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20 dark:border-blue-900">
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="group cursor-pointer hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-colors">
+                    <CardTitle className="text-base flex items-center justify-between gap-2">
+                      <span className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        What is a budget cycle?
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-blue-600 dark:text-blue-400 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent className="space-y-3">
+                    <CardDescription className="text-sm">
+                      A budget cycle is the period you track your spending. Most
+                      people use monthly cycles, but you might need custom
+                      cycles if you:
+                    </CardDescription>
+                    <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside ml-2">
+                      <li>
+                        Get paid bi-weekly and want cycles aligned to paydays
+                      </li>
+                      <li>
+                        Have multiple income sources with different schedules
+                      </li>
+                      <li>
+                        Want overlapping cycles (e.g., rent cycle vs. spending
+                        cycle)
+                      </li>
+                    </ul>
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
 
             {error && (
               <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md border border-red-200">
