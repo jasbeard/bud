@@ -592,7 +592,7 @@ export default function Page() {
             <StepperList className="w-full">
               {onboardingSteps.map((step, index) => (
                 <React.Fragment key={step.id}>
-                  <StepperItem>
+                  <StepperItem step={index}>
                     <StepperTrigger
                       disabled={
                         !completedSteps.includes(index) &&
@@ -601,6 +601,7 @@ export default function Page() {
                       }
                     >
                       <StepperIndicator
+                        step={index}
                         size="sm"
                         showCheck={completedSteps.includes(index)}
                       />
@@ -614,7 +615,9 @@ export default function Page() {
                       </StepperContent>
                     </StepperTrigger>
                   </StepperItem>
-                  {index < onboardingSteps.length - 1 && <StepperSeparator />}
+                  {index < onboardingSteps.length - 1 && (
+                    <StepperSeparator step={index} />
+                  )}
                 </React.Fragment>
               ))}
             </StepperList>
