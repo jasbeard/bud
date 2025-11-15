@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { budgetCycles, budgetCycleDates, budgetspaces } from "@/lib/schema";
+import { budgetCycles, budgetCycleTimeline, budgetspaces } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -67,8 +67,8 @@ export async function GET(
     if (budgetcycle[0].type === "custom") {
       const dates = await db
         .select()
-        .from(budgetCycleDates)
-        .where(eq(budgetCycleDates.budgetCycleId, params.id));
+        .from(budgetCycleTimeline)
+        .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
 
       return NextResponse.json({
         ...budgetcycle[0],
@@ -136,8 +136,8 @@ export async function PUT(
     if (validatedData.dates && validatedData.type === "custom") {
       // Delete existing dates
       await db
-        .delete(budgetCycleDates)
-        .where(eq(budgetCycleDates.budgetCycleId, params.id));
+        .delete(budgetCycleTimeline)
+        .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
 
       // Insert new dates
       const dateEntries = validatedData.dates.map((date) => ({
@@ -147,7 +147,7 @@ export async function PUT(
         endDate: date.endDate,
       }));
 
-      await db.insert(budgetCycleDates).values(dateEntries);
+      await db.insert(budgetCycleTimeline).values(dateEntries);
     }
 
     return NextResponse.json(updatedBudgetcycle[0]);

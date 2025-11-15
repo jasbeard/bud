@@ -121,8 +121,8 @@ export const budgetCycles = pgTable("budget_cycles", {
   updatedAt: timestamp("updated_at"),
 });
 
-// Budget cycle dates table (for custom cycles with multiple date ranges)
-export const budgetCycleDates = pgTable("budget_cycle_dates", {
+// Budget cycle timeline table (for custom cycles with multiple date ranges)
+export const budgetCycleTimeline = pgTable("budget_cycle_timeline", {
   id: uuid("id").primaryKey().defaultRandom(),
   budgetCycleId: uuid("budget_cycle_id")
     .notNull()
@@ -132,6 +132,7 @@ export const budgetCycleDates = pgTable("budget_cycle_dates", {
     .references(() => users.id, { onDelete: "cascade" }),
   startDate: integer("start_date").notNull(), // Calendar date as integer (e.g., 1-31)
   endDate: integer("end_date").notNull(), // Calendar date as integer (e.g., 1-31)
+  order: integer("order"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at"),
 });
@@ -160,7 +161,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   budgetCycles: many(budgetCycles),
-  budgetCycleDates: many(budgetCycleDates),
+  budgetCycleTimeline: many(budgetCycleTimeline),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -223,19 +224,19 @@ export const budgetCyclesRelations = relations(
       references: [budgetspaces.id],
     }),
     budgets: many(budgets),
-    dates: many(budgetCycleDates),
+    timeline: many(budgetCycleTimeline),
   })
 );
 
-export const budgetCycleDatesRelations = relations(
-  budgetCycleDates,
+export const budgetCycleTimelineRelations = relations(
+  budgetCycleTimeline,
   ({ one }) => ({
     user: one(users, {
-      fields: [budgetCycleDates.userId],
+      fields: [budgetCycleTimeline.userId],
       references: [users.id],
     }),
     budgetCycle: one(budgetCycles, {
-      fields: [budgetCycleDates.budgetCycleId],
+      fields: [budgetCycleTimeline.budgetCycleId],
       references: [budgetCycles.id],
     }),
   })
