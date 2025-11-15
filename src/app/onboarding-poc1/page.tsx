@@ -261,7 +261,8 @@ export default function Page() {
 
       // Convert cycles data to API format
       const cycleDates =
-        formData.cycles?.map((cycle) => ({
+        formData.cycles?.map((cycle, index) => ({
+          order: index + 1,
           startDate: cycle.from?.getDate() || 1,
           endDate: cycle.to?.getDate() || 31,
         })) || [];
@@ -271,33 +272,33 @@ export default function Page() {
           name: formData.budgetspace,
         },
         cycles: {
-          type: formData.cycleType,
-          dates: formData.cycleType === "custom" ? cycleDates : undefined,
+          type: selectedPreset?.name,
+          timeline: cycleDates,
         },
       };
 
-      const response = await fetch("/api/onboarding", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(onboardingData),
-      });
+      // const response = await fetch("/api/onboarding", {
+      //   method: "POST",
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //   },
+      //   body: JSON.stringify(onboardingData),
+      // });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to complete onboarding");
-      }
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   throw new Error(errorData.error || "Failed to complete onboarding");
+      // }
 
-      const result = await response.json();
-      console.log("Onboarding completed:", result);
+      // const result = await response.json();
+      // console.log("Onboarding completed:", result);
 
       // Mark final step as completed
-      setCompletedSteps((prev) => [...prev, currentStep]);
+      // setCompletedSteps((prev) => [...prev, currentStep]);
 
       // Redirect to dashboard or next page
       // You can add navigation logic here
-      console.log("Onboarding completed successfully!");
+      console.log("results: ", onboardingData);
     } catch (err) {
       console.error("Error completing onboarding:", err);
       setError(
