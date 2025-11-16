@@ -81,7 +81,15 @@ const defaultPreset: CyclePreset = {
   type: "monthly",
 };
 
-const defaultCategories = ["Food", "Transportation", "Rent", "Allowance"];
+const defaultCategories = [
+  "Groceries",
+  "Transportation",
+  "Rent",
+  "Personal Allowance",
+  "Internet",
+  "Investment",
+  "Salary",
+];
 
 // Helper functions to convert between step names and indices
 const getStepIndexFromName = (stepName: string): number | null => {
@@ -474,7 +482,7 @@ export default function Page() {
               {currentStep === 2 && (
                 <Button
                   variant="ghost"
-                  className="cursor-pointer"
+                  className="cursor-pointer disabled:cursor-not-allowed"
                   onClick={handleCompleteOnboarding}
                   disabled={
                     isLoading ||

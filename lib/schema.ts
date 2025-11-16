@@ -90,6 +90,16 @@ export const categories = pgTable("categories", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Default Categories table (static data, not tied to budgetspace)
+export const defaultCategories = pgTable("default_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  color: text("color"),
+  icon: text("icon"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
 // Transactions table
 export const transactions = pgTable("transactions", {
   id: uuid("id").primaryKey().defaultRandom(),
