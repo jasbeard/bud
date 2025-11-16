@@ -3,29 +3,41 @@
 import * as React from "react";
 import { Plus } from "lucide-react";
 import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import {
   InputGroup,
   InputGroupInput,
   InputGroupButton,
 } from "@/components/ui/input-group";
 import { Category } from "@/components/category";
+import { type UseFormReturn } from "react-hook-form";
 
 interface CategoriesStepProps {
+  form: UseFormReturn<{
+    budgetspace: string;
+    cycles?: Array<{ from: Date; to?: Date }> | undefined;
+    maxCycles?: number | undefined;
+    cycleType: "monthly" | "custom";
+    categories?: string[] | undefined;
+  }>;
   defaultCategories: string[];
-  onCategoriesChange?: (categories: string[]) => void;
+  error: string | null;
+  isLoading: boolean;
 }
 
 export function CategoriesStep({
+  form,
   defaultCategories,
-  onCategoriesChange,
+  error,
+  isLoading,
 }: CategoriesStepProps) {
-  const [categories, setCategories] =
-    React.useState<string[]>(defaultCategories);
   const [newCategoryInput, setNewCategoryInput] = React.useState("");
-
-  // Notify parent when categories change
-  React.useEffect(() => {
-    onCategoriesChange?.(categories);
-  }, [categories, onCategoriesChange]);
+  const categories = form.watch("categories") || defaultCategories;
 
   const handleAddCategory = () => {
     if (
@@ -33,7 +45,7 @@ export function CategoriesStep({
       !categories.includes(newCategoryInput.trim())
     ) {
       const updatedCategories = [...categories, newCategoryInput.trim()];
-      setCategories(updatedCategories);
+      form.setValue("categories", updatedCategories, { shouldValidate: true });
       setNewCategoryInput("");
     }
   };
@@ -46,7 +58,10 @@ export function CategoriesStep({
   };
 
   const handleRemoveCategory = (categoryToRemove: string) => {
-    setCategories(categories.filter((cat) => cat !== categoryToRemove));
+    const updatedCategories = categories.filter(
+      (cat) => cat !== categoryToRemove
+    );
+    form.setValue("categories", updatedCategories, { shouldValidate: true });
   };
 
   return (
@@ -58,37 +73,60 @@ export function CategoriesStep({
         </p>
       </div>
 
-      <div className="space-y-4">
-        <InputGroup>
-          <InputGroupInput
-            placeholder="Enter category name"
-            value={newCategoryInput}
-            onChange={(e) => setNewCategoryInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-          />
-          <InputGroupButton
-            onClick={handleAddCategory}
-            disabled={
-              !newCategoryInput.trim() ||
-              categories.includes(newCategoryInput.trim())
-            }
-          >
-            <Plus className="h-4 w-4" />
-            Add
-          </InputGroupButton>
-        </InputGroup>
-
-        <div className="flex flex-wrap gap-2 mt-4">
-          {categories.map((category) => (
-            <Category
-              name={category}
-              key={category}
-              isDefault={defaultCategories.includes(category)}
-              onRemove={() => handleRemoveCategory(category)}
-            />
-          ))}
+      {error && (
+        <div className="text-red-500 text-sm bg-red-50 p-3 rounded-md border border-red-200">
+          {error}
         </div>
-      </div>
+      )}
+
+      <Form {...form}>
+        <form className="space-y-6">
+          <FormField
+            control={form.control}
+            name="categories"
+            render={() => (
+              <FormItem>
+                <FormControl>
+                  <div className="space-y-4">
+                    <InputGroup>
+                      <InputGroupInput
+                        placeholder="Enter category name"
+                        value={newCategoryInput}
+                        onChange={(e) => setNewCategoryInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isLoading}
+                      />
+                      <InputGroupButton
+                        onClick={handleAddCategory}
+                        disabled={
+                          isLoading ||
+                          !newCategoryInput.trim() ||
+                          categories.includes(newCategoryInput.trim())
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add
+                      </InputGroupButton>
+                    </InputGroup>
+
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {categories.map((category) => (
+                        <Category
+                          name={category}
+                          key={category}
+                          isDefault={defaultCategories.includes(category)}
+                          onRemove={() => handleRemoveCategory(category)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </form>
+      </Form>
     </div>
   );
 }

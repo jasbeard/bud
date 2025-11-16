@@ -45,6 +45,10 @@ const formSchema = z.object({
     .optional(),
   maxCycles: z.number().min(1).max(12).optional(),
   cycleType: z.enum(["monthly", "custom"]),
+  categories: z
+    .array(z.string().min(1, "Category name cannot be empty"))
+    .min(1, "At least one category is required")
+    .optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -87,8 +91,6 @@ export default function Page() {
   // Default to Monthly preset
   const [selectedPreset, setSelectedPreset] =
     React.useState<CyclePreset | null>(defaultPreset);
-  const [categories, setCategories] =
-    React.useState<string[]>(defaultCategories);
 
   const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
@@ -98,6 +100,7 @@ export default function Page() {
       cycles: [],
       maxCycles: 2,
       cycleType: "monthly",
+      categories: defaultCategories,
     },
   });
 
@@ -174,7 +177,11 @@ export default function Page() {
     if (currentStep < onboardingSteps.length - 1) {
       // Validate current step
       const fieldsToValidate =
-        currentStep === 0 ? ["budgetspace" as const] : ["cycles" as const];
+        currentStep === 0
+          ? ["budgetspace" as const]
+          : currentStep === 1
+          ? ["cycles" as const]
+          : ["categories" as const];
       const isValid = await form.trigger(fieldsToValidate);
 
       if (isValid) {
@@ -207,7 +214,8 @@ export default function Page() {
         })) || [];
 
       // Filter out default categories, only send newly added ones
-      const newCategories = categories.filter(
+      const formCategories = formData.categories || [];
+      const newCategories = formCategories.filter(
         (category) => !defaultCategories.includes(category)
       );
 
@@ -289,8 +297,10 @@ export default function Page() {
       case 2:
         return (
           <CategoriesStep
+            form={form}
             defaultCategories={defaultCategories}
-            onCategoriesChange={setCategories}
+            error={error}
+            isLoading={isLoading}
           />
         );
 
@@ -400,7 +410,7 @@ export default function Page() {
                   disabled={
                     isLoading ||
                     isCheckingExisting ||
-                    categories.filter(
+                    (form.getValues("categories") || []).filter(
                       (category) => !defaultCategories.includes(category)
                     ).length > 0
                   }
