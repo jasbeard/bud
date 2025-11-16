@@ -45,13 +45,7 @@ export function DynamicallySharedLayout({
   children: React.ReactNode;
 }) {
   const path = usePathname();
-  const exemptedPath = [
-    "/",
-    "/onboarding",
-    "/onboarding-poc1",
-    "/login",
-    "/signup",
-  ];
+  const exemptedPath = ["/", "/onboarding", "/login", "/signup"];
   return exemptedPath.includes(path) ? (
     <BlankLayout>{children}</BlankLayout>
   ) : (

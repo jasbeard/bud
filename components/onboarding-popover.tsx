@@ -24,11 +24,7 @@ import { AppPages } from "@/lib/types";
 
 export function OnboardingPopover() {
   const path = usePagePath({ mode: "path" }) as AppPages;
-  const exemptedPaths = [
-    AppPages.HOME,
-    AppPages.ONBOARDING,
-    AppPages.ONBOARDINGPOC,
-  ];
+  const exemptedPaths = [AppPages.HOME, AppPages.ONBOARDING];
   console.log("onboardingpopover: ", path);
   if (exemptedPaths.includes(path)) return null;
 
