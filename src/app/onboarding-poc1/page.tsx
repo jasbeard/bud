@@ -17,7 +17,7 @@ import { MoveRight, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 import { CyclePreset, presetToDateRanges } from "@/lib/utils";
@@ -83,13 +83,39 @@ const defaultPreset: CyclePreset = {
 
 const defaultCategories = ["Food", "Transportation", "Rent", "Allowance"];
 
+// Helper functions to convert between step names and indices
+const getStepIndexFromName = (stepName: string): number | null => {
+  const index = onboardingSteps.findIndex((step) => step.id === stepName);
+  return index >= 0 ? index : null;
+};
+
+const getStepNameFromIndex = (index: number): string | null => {
+  return onboardingSteps[index]?.id ?? null;
+};
+
 export default function Page() {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = React.useState(0);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Initialize step from query param or default to 0
+  const stepFromQuery = React.useMemo(() => {
+    const stepName = searchParams.get("step");
+    if (stepName) {
+      const index = getStepIndexFromName(stepName);
+      if (index !== null) {
+        return index;
+      }
+    }
+    return null;
+  }, [searchParams]);
+
+  const [currentStep, setCurrentStep] = React.useState(stepFromQuery ?? 0);
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isCheckingExisting, setIsCheckingExisting] = React.useState(true);
+  const hasInitializedRef = React.useRef(false);
   // Default to Monthly preset
   const [selectedPreset, setSelectedPreset] =
     React.useState<CyclePreset | null>(defaultPreset);
@@ -106,6 +132,26 @@ export default function Page() {
     },
   });
 
+  // Helper function to update step and sync with URL
+  const updateStep = React.useCallback(
+    (newStep: number) => {
+      setCurrentStep(newStep);
+      const params = new URLSearchParams(searchParams.toString());
+      const stepName = getStepNameFromIndex(newStep);
+      if (newStep === 0 || !stepName) {
+        // Remove step param for first step or invalid step
+        params.delete("step");
+      } else {
+        params.set("step", stepName);
+      }
+      const newUrl = params.toString()
+        ? `${pathname}?${params.toString()}`
+        : pathname;
+      router.replace(newUrl, { scroll: false });
+    },
+    [router, pathname, searchParams]
+  );
+
   // Initialize with Monthly preset on mount
   React.useEffect(() => {
     if (selectedPreset?.type === "monthly") {
@@ -121,9 +167,18 @@ export default function Page() {
   }, []);
 
   // Check for existing budget spaces and cycles on component mount
+  // Only run once and only if no step is specified in URL (fresh load)
   React.useEffect(() => {
+    // Skip if we've already initialized or if there's a step in the URL
+    const stepInUrl = searchParams.get("step");
+    if (hasInitializedRef.current || stepInUrl) {
+      setIsCheckingExisting(false);
+      return;
+    }
+
     const checkExistingData = async () => {
       try {
+        hasInitializedRef.current = true;
         const session = await authClient.getSession();
         if (!session?.data?.user?.id) {
           setIsCheckingExisting(false);
@@ -160,9 +215,11 @@ export default function Page() {
 
         // Determine which step to start on
         if (budgetspaceExists && cyclesExist) {
-          setCurrentStep(2); // Skip to categories step
+          setCurrentStep(2);
+          router.replace(`${pathname}?step=categories`, { scroll: false });
         } else if (budgetspaceExists) {
-          setCurrentStep(1); // Skip to cycles step
+          setCurrentStep(1);
+          router.replace(`${pathname}?step=budgetcycle`, { scroll: false });
         }
         // If budget space doesn't exist, stay on step 0
       } catch (error) {
@@ -173,7 +230,8 @@ export default function Page() {
     };
 
     checkExistingData();
-  }, [form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleNext = async () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -188,7 +246,7 @@ export default function Page() {
 
       if (isValid) {
         setCompletedSteps((prev) => [...prev, currentStep]);
-        setCurrentStep(currentStep + 1);
+        updateStep(currentStep + 1);
         setError(null); // Clear any previous errors
       }
     } else {
@@ -349,7 +407,7 @@ export default function Page() {
               // Only allow navigation to completed steps or the next step
               if (completedSteps.includes(step) || step === currentStep + 1) {
                 setError(null);
-                setCurrentStep(step);
+                updateStep(step);
               }
             }}
             orientation="horizontal"
@@ -402,10 +460,11 @@ export default function Page() {
           <div className="flex justify-between items-center max-w-2xl mx-auto w-full">
             <Button
               variant="ghost"
+              className="cursor-pointer"
               disabled={currentStep === 0 || isCheckingExisting}
               onClick={() => {
                 setError(null); // Clear any errors when going back
-                setCurrentStep(currentStep - 1);
+                updateStep(currentStep - 1);
               }}
             >
               Previous
@@ -415,6 +474,7 @@ export default function Page() {
               {currentStep === 2 && (
                 <Button
                   variant="ghost"
+                  className="cursor-pointer"
                   onClick={handleCompleteOnboarding}
                   disabled={
                     isLoading ||
@@ -430,7 +490,7 @@ export default function Page() {
 
               <Button
                 onClick={handleNext}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 cursor-pointer"
                 disabled={isLoading || isCheckingExisting}
               >
                 {isCheckingExisting
