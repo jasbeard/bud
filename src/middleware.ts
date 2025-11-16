@@ -7,6 +7,7 @@ const protectedRoutes: string[] = [
   AppPages.DASHBOARD,
   AppPages.BUDGET,
   AppPages.ONBOARDING,
+  AppPages.ONBOARDINGPOC,
 ];
 const publicRoutes: string[] = [AppPages.LOGIN, AppPages.SIGNUP, AppPages.HOME];
 

@@ -12,22 +12,17 @@ import {
   StepperDescription,
   StepperSeparator,
 } from "@/components/ui/stepper";
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupButton,
-} from "@/components/ui/input-group";
 import * as React from "react";
-import { MoveRight, HelpCircle, Plus } from "lucide-react";
+import { MoveRight, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { authClient } from "@/lib/auth-client";
 
 import { CyclePreset, presetToDateRanges } from "@/lib/utils";
-import { Category } from "@/components/category";
 import { BudgetCycleStep } from "@/components/onboarding/budget-cycle-step";
 import { BudgetspaceStep } from "@/components/onboarding/budgetspace-step";
+import { CategoriesStep } from "@/components/onboarding/categories-step";
 
 const formSchema = z.object({
   budgetspace: z
@@ -94,7 +89,6 @@ export default function Page() {
     React.useState<CyclePreset | null>(defaultPreset);
   const [categories, setCategories] =
     React.useState<string[]>(defaultCategories);
-  const [newCategoryInput, setNewCategoryInput] = React.useState("");
 
   const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
@@ -225,7 +219,7 @@ export default function Page() {
           type: selectedPreset?.name,
           timeline: cycleDates,
         },
-        categories: newCategories,
+        categories: newCategories.length ? newCategories : null,
       };
 
       // const response = await fetch("/api/onboarding", {
@@ -294,57 +288,10 @@ export default function Page() {
 
       case 2:
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold">Set Up Categories</h2>
-              <p className="text-muted-foreground">
-                Create spending categories to organize your transactions.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <InputGroup>
-                <InputGroupInput
-                  placeholder="Enter category name"
-                  value={newCategoryInput}
-                  onChange={(e) => setNewCategoryInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && newCategoryInput.trim()) {
-                      e.preventDefault();
-                      if (!categories.includes(newCategoryInput.trim())) {
-                        setCategories([...categories, newCategoryInput.trim()]);
-                        setNewCategoryInput("");
-                      }
-                    }
-                  }}
-                />
-                <InputGroupButton
-                  onClick={() => {
-                    if (
-                      newCategoryInput.trim() &&
-                      !categories.includes(newCategoryInput.trim())
-                    ) {
-                      setCategories([...categories, newCategoryInput.trim()]);
-                      setNewCategoryInput("");
-                    }
-                  }}
-                  disabled={
-                    !newCategoryInput.trim() ||
-                    categories.includes(newCategoryInput.trim())
-                  }
-                >
-                  <Plus className="h-4 w-4" />
-                  Add
-                </InputGroupButton>
-              </InputGroup>
-
-              <div className="flex flex-wrap gap-2 mt-4">
-                {categories.map((category) => (
-                  <Category name={category} key={category} />
-                ))}
-              </div>
-            </div>
-          </div>
+          <CategoriesStep
+            defaultCategories={defaultCategories}
+            onCategoriesChange={setCategories}
+          />
         );
 
       default:
@@ -445,20 +392,38 @@ export default function Page() {
               Previous
             </Button>
 
-            <Button
-              onClick={handleNext}
-              className="flex items-center gap-2"
-              disabled={isLoading || isCheckingExisting}
-            >
-              {isCheckingExisting
-                ? "Loading..."
-                : isLoading
-                ? "Completing Setup..."
-                : currentStep === onboardingSteps.length - 1
-                ? "Complete Setup"
-                : "Next Step"}
-              {!isLoading && <MoveRight className="h-4 w-4" />}
-            </Button>
+            <div className="flex items-center gap-2">
+              {currentStep === 2 && (
+                <Button
+                  variant="ghost"
+                  onClick={handleCompleteOnboarding}
+                  disabled={
+                    isLoading ||
+                    isCheckingExisting ||
+                    categories.filter(
+                      (category) => !defaultCategories.includes(category)
+                    ).length > 0
+                  }
+                >
+                  Skip
+                </Button>
+              )}
+
+              <Button
+                onClick={handleNext}
+                className="flex items-center gap-2"
+                disabled={isLoading || isCheckingExisting}
+              >
+                {isCheckingExisting
+                  ? "Loading..."
+                  : isLoading
+                  ? "Completing Setup..."
+                  : currentStep === onboardingSteps.length - 1
+                  ? "Complete Setup"
+                  : "Next Step"}
+                {!isLoading && <MoveRight className="h-4 w-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
