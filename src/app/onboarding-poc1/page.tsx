@@ -12,8 +12,13 @@ import {
   StepperDescription,
   StepperSeparator,
 } from "@/components/ui/stepper";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupButton,
+} from "@/components/ui/input-group";
 import * as React from "react";
-import { MoveRight, HelpCircle } from "lucide-react";
+import { MoveRight, HelpCircle, Plus } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -87,6 +92,9 @@ export default function Page() {
   // Default to Monthly preset
   const [selectedPreset, setSelectedPreset] =
     React.useState<CyclePreset | null>(defaultPreset);
+  const [categories, setCategories] =
+    React.useState<string[]>(defaultCategories);
+  const [newCategoryInput, setNewCategoryInput] = React.useState("");
 
   const defaultMonth = React.useMemo(() => new Date(2025, 5, 12), []);
   const form = useForm<FormData>({
@@ -204,6 +212,11 @@ export default function Page() {
           endDate: cycle.to?.getDate() || 31,
         })) || [];
 
+      // Filter out default categories, only send newly added ones
+      const newCategories = categories.filter(
+        (category) => !defaultCategories.includes(category)
+      );
+
       const onboardingData = {
         budgetspace: {
           name: formData.budgetspace,
@@ -212,6 +225,7 @@ export default function Page() {
           type: selectedPreset?.name,
           timeline: cycleDates,
         },
+        categories: newCategories,
       };
 
       // const response = await fetch("/api/onboarding", {
@@ -288,12 +302,44 @@ export default function Page() {
               </p>
             </div>
 
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                Category setup coming soon...
-              </p>
-              <div className="max-w-4xl flex gap-2 mt-4">
-                {defaultCategories.map((category) => (
+            <div className="space-y-4">
+              <InputGroup>
+                <InputGroupInput
+                  placeholder="Enter category name"
+                  value={newCategoryInput}
+                  onChange={(e) => setNewCategoryInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newCategoryInput.trim()) {
+                      e.preventDefault();
+                      if (!categories.includes(newCategoryInput.trim())) {
+                        setCategories([...categories, newCategoryInput.trim()]);
+                        setNewCategoryInput("");
+                      }
+                    }
+                  }}
+                />
+                <InputGroupButton
+                  onClick={() => {
+                    if (
+                      newCategoryInput.trim() &&
+                      !categories.includes(newCategoryInput.trim())
+                    ) {
+                      setCategories([...categories, newCategoryInput.trim()]);
+                      setNewCategoryInput("");
+                    }
+                  }}
+                  disabled={
+                    !newCategoryInput.trim() ||
+                    categories.includes(newCategoryInput.trim())
+                  }
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </InputGroupButton>
+              </InputGroup>
+
+              <div className="flex flex-wrap gap-2 mt-4">
+                {categories.map((category) => (
                   <Category name={category} key={category} />
                 ))}
               </div>
