@@ -1,0 +1,1 @@
+ALTER TABLE "budget_cycles" DROP COLUMN "type";

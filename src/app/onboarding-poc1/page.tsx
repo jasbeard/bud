@@ -17,6 +17,7 @@ import { MoveRight, HelpCircle } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 
 import { CyclePreset, presetToDateRanges } from "@/lib/utils";
@@ -83,6 +84,7 @@ const defaultPreset: CyclePreset = {
 const defaultCategories = ["Food", "Transportation", "Rent", "Allowance"];
 
 export default function Page() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = React.useState(0);
   const [completedSteps, setCompletedSteps] = React.useState<number[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -230,28 +232,35 @@ export default function Page() {
         categories: newCategories.length ? newCategories : null,
       };
 
-      // const response = await fetch("/api/onboarding", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify(onboardingData),
-      // });
+      const response = await fetch("/api/onboarding", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(onboardingData),
+      });
 
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.error || "Failed to complete onboarding");
-      // }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to complete onboarding");
+      }
 
-      // const result = await response.json();
+      const result = await response.json();
       // console.log("Onboarding completed:", result);
 
-      // Mark final step as completed
-      // setCompletedSteps((prev) => [...prev, currentStep]);
+      // Only redirect if onboarding was successful
+      if (result.success) {
+        // Mark final step as completed
+        setCompletedSteps((prev) => [...prev, currentStep]);
 
-      // Redirect to dashboard or next page
-      // You can add navigation logic here
-      console.log("results: ", onboardingData);
+        // Redirect to budget page
+        router.push("/budget");
+      } else {
+        throw new Error(
+          result.error ||
+            "Onboarding completed but returned unsuccessful status"
+        );
+      }
     } catch (err) {
       console.error("Error completing onboarding:", err);
       setError(

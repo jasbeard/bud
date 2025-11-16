@@ -110,7 +110,9 @@ export const transactions = pgTable("transactions", {
 // Budget cycles table
 export const budgetCycles = pgTable("budget_cycles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  type: text("type", { enum: ["monthly", "custom"] }).notNull(),
+  type: text("type", {
+    enum: ["monthly", "bi-weekly", "semi-monthly", "weekly", "custom"],
+  }).notNull(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),

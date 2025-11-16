@@ -1,10 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { budgetspaces, budgetCycles, budgetCycleTimeline } from "@/lib/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  budgetspaces,
+  budgetCycles,
+  budgetCycleTimeline,
+  categories,
+} from "@/lib/schema";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+
+// Cycle preset names that the frontend can send
+const CYCLE_PRESET_NAMES = [
+  "Monthly",
+  "Bi-weekly",
+  "Semi-monthly",
+  "Weekly",
+  "Custom",
+] as const;
 
 const onboardingSchema = z.object({
   budgetspace: z.object({
@@ -12,7 +26,16 @@ const onboardingSchema = z.object({
     description: z.string().optional(),
   }),
   cycles: z.object({
-    type: z.enum(["monthly", "custom"]),
+    type: z.enum(CYCLE_PRESET_NAMES),
+    timeline: z
+      .array(
+        z.object({
+          order: z.number().optional(),
+          startDate: z.number().min(1).max(31),
+          endDate: z.number().min(1).max(31),
+        })
+      )
+      .optional(),
     dates: z
       .array(
         z.object({
@@ -22,6 +45,7 @@ const onboardingSchema = z.object({
       )
       .optional(),
   }),
+  categories: z.array(z.string().min(1)).nullable().optional(),
 });
 
 // POST /api/onboarding - Complete onboarding process
@@ -40,6 +64,25 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const validatedData = onboardingSchema.parse(body);
+
+    // Map frontend preset names to database enum values
+    const cycleTypeMap: Record<
+      (typeof CYCLE_PRESET_NAMES)[number],
+      "monthly" | "bi-weekly" | "semi-monthly" | "weekly" | "custom"
+    > = {
+      Monthly: "monthly",
+      "Bi-weekly": "bi-weekly",
+      "Semi-monthly": "semi-monthly",
+      Weekly: "weekly",
+      Custom: "custom",
+    };
+
+    const cycleType = cycleTypeMap[validatedData.cycles.type];
+
+    // Get dates from either timeline or dates property
+    const timelineDates = validatedData.cycles.timeline || [];
+    const datesArray = validatedData.cycles.dates || [];
+    const cycleDates = timelineDates.length > 0 ? timelineDates : datesArray;
 
     // Check if user already has a budgetspace
     const existingBudgetspaces = await db
@@ -81,7 +124,7 @@ export async function POST(request: NextRequest) {
       const newBudgetCycle = await db
         .insert(budgetCycles)
         .values({
-          type: validatedData.cycles.type,
+          type: cycleType,
           userId,
           budgetspaceId,
         })
@@ -89,20 +132,37 @@ export async function POST(request: NextRequest) {
 
       budgetCycleId = newBudgetCycle[0].id;
 
-      // If it's a custom cycle with dates, create the date entries
-      if (
-        validatedData.cycles.type === "custom" &&
-        validatedData.cycles.dates
-      ) {
-        const dateEntries = validatedData.cycles.dates.map((date) => ({
-          budgetCycleId: budgetCycleId!,
-          userId,
-          startDate: date.startDate,
-          endDate: date.endDate,
-        }));
+      // If there are cycle dates, create the timeline entries
+      // For monthly cycles, we still create timeline entries if dates are provided
+      if (cycleDates.length > 0) {
+        const dateEntries = cycleDates.map((date, index) => {
+          // Handle both timeline (with order) and dates (without order) formats
+          const timelineDate = date as {
+            startDate: number;
+            endDate: number;
+            order?: number;
+          };
+          return {
+            budgetCycleId: budgetCycleId!,
+            userId,
+            startDate: timelineDate.startDate,
+            endDate: timelineDate.endDate,
+            order: timelineDate.order ?? index + 1,
+          };
+        });
 
         await db.insert(budgetCycleTimeline).values(dateEntries);
       }
+    }
+
+    // Create categories if provided
+    if (validatedData.categories && validatedData.categories.length > 0) {
+      const categoryEntries = validatedData.categories.map((categoryName) => ({
+        name: categoryName,
+        budgetspaceId,
+      }));
+
+      await db.insert(categories).values(categoryEntries);
     }
 
     console.log("Onboarding completed successfully for user:", userId);

@@ -162,6 +162,20 @@
       "when": 1763220690873,
       "tag": "0022_slow_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1763304261498,
+      "tag": "0023_new_the_phantom",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1763304279713,
+      "tag": "0024_sticky_spacker_dave",
+      "breakpoints": true
     }
   ]
 }

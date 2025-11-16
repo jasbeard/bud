@@ -7,7 +7,9 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 
 const updateBudgetCycleSchema = z.object({
-  type: z.enum(["monthly", "custom"]).optional(),
+  type: z
+    .enum(["monthly", "bi-weekly", "semi-monthly", "weekly", "custom"])
+    .optional(),
   dates: z
     .array(
       z.object({
@@ -63,20 +65,17 @@ export async function GET(
       );
     }
 
-    // If it's a custom cycle, also fetch the dates
-    if (budgetcycle[0].type === "custom") {
-      const dates = await db
-        .select()
-        .from(budgetCycleTimeline)
-        .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
+    // Fetch timeline dates for cycles that have them (all except pure monthly)
+    // Even monthly cycles might have timeline entries if dates were provided
+    const dates = await db
+      .select()
+      .from(budgetCycleTimeline)
+      .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
 
-      return NextResponse.json({
-        ...budgetcycle[0],
-        dates,
-      });
-    }
-
-    return NextResponse.json(budgetcycle[0]);
+    return NextResponse.json({
+      ...budgetcycle[0],
+      dates: dates.length > 0 ? dates : undefined,
+    });
   } catch (error) {
     console.error("Error fetching budgetcycle:", error);
     return NextResponse.json(
@@ -132,22 +131,26 @@ export async function PUT(
       .where(eq(budgetCycles.id, params.id))
       .returning();
 
-    // If dates are provided and it's a custom cycle, update the dates
-    if (validatedData.dates && validatedData.type === "custom") {
+    // If dates are provided, update the timeline entries
+    // All cycle types can have timeline entries
+    if (validatedData.dates) {
       // Delete existing dates
       await db
         .delete(budgetCycleTimeline)
         .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
 
-      // Insert new dates
-      const dateEntries = validatedData.dates.map((date) => ({
-        budgetCycleId: params.id,
-        userId,
-        startDate: date.startDate,
-        endDate: date.endDate,
-      }));
+      // Insert new dates if provided
+      if (validatedData.dates.length > 0) {
+        const dateEntries = validatedData.dates.map((date, index) => ({
+          budgetCycleId: params.id,
+          userId,
+          startDate: date.startDate,
+          endDate: date.endDate,
+          order: index + 1,
+        }));
 
-      await db.insert(budgetCycleTimeline).values(dateEntries);
+        await db.insert(budgetCycleTimeline).values(dateEntries);
+      }
     }
 
     return NextResponse.json(updatedBudgetcycle[0]);

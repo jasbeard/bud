@@ -7,7 +7,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 
 const createBudgetCycleSchema = z.object({
-  type: z.enum(["monthly", "custom"]),
+  type: z.enum(["monthly", "bi-weekly", "semi-monthly", "weekly", "custom"]),
   budgetspaceId: z.uuid().optional(),
   dates: z
     .array(
@@ -136,13 +136,15 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    // If it's a custom cycle with dates, create the date entries
-    if (validatedData.type === "custom" && validatedData.dates) {
-      const dateEntries = validatedData.dates.map((date) => ({
+    // If dates are provided, create the timeline entries
+    // All cycle types except pure monthly can have timeline entries
+    if (validatedData.dates && validatedData.dates.length > 0) {
+      const dateEntries = validatedData.dates.map((date, index) => ({
         budgetCycleId: newBudgetCycle[0].id,
         userId,
         startDate: date.startDate,
         endDate: date.endDate,
+        order: index + 1,
       }));
 
       await db.insert(budgetCycleTimeline).values(dateEntries);
