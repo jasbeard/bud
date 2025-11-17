@@ -287,15 +287,19 @@ export default function Page() {
         (category) => !defaultCategoryNames.includes(category)
       );
 
+      // Ensure cycles.type is always a valid preset name
+      // Fallback to "Monthly" if selectedPreset is null (shouldn't happen, but safety check)
+      const cycleType = selectedPreset?.name || "Monthly";
+
       const onboardingData = {
         budgetspace: {
           name: formData.budgetspace,
         },
         cycles: {
-          type: selectedPreset?.name,
-          timeline: cycleDates,
+          type: cycleType,
+          timeline: cycleDates.length > 0 ? cycleDates : null,
         },
-        categories: newCategories.length ? newCategories : null,
+        categories: newCategories.length > 0 ? newCategories : null,
       };
 
       const response = await fetch("/api/onboarding", {

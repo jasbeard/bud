@@ -35,6 +35,7 @@ const onboardingSchema = z.object({
           endDate: z.number().min(1).max(31),
         })
       )
+      .nullable()
       .optional(),
     dates: z
       .array(
