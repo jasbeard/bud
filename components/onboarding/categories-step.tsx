@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import { Plus } from "lucide-react";
 import {
   Form,
@@ -14,8 +15,9 @@ import {
   InputGroupInput,
   InputGroupButton,
 } from "@/components/ui/input-group";
-import { Category } from "@/components/category";
 import { type UseFormReturn } from "react-hook-form";
+import { CategoriesList } from "./categories-list";
+import { CategoriesListSkeleton } from "./categories-list-skeleton";
 
 interface CategoriesStepProps {
   form: UseFormReturn<{
@@ -25,19 +27,17 @@ interface CategoriesStepProps {
     cycleType: "monthly" | "custom";
     categories?: string[] | undefined;
   }>;
-  defaultCategories: string[];
   error: string | null;
   isLoading: boolean;
 }
 
 export function CategoriesStep({
   form,
-  defaultCategories,
   error,
   isLoading,
 }: CategoriesStepProps) {
   const [newCategoryInput, setNewCategoryInput] = React.useState("");
-  const categories = form.watch("categories") || defaultCategories;
+  const categories = form.watch("categories") || [];
 
   const handleAddCategory = () => {
     if (
@@ -109,16 +109,13 @@ export function CategoriesStep({
                       </InputGroupButton>
                     </InputGroup>
 
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {categories.map((category) => (
-                        <Category
-                          name={category}
-                          key={category}
-                          isDefault={defaultCategories.includes(category)}
-                          onRemove={() => handleRemoveCategory(category)}
-                        />
-                      ))}
-                    </div>
+                    <Suspense fallback={<CategoriesListSkeleton />}>
+                      <CategoriesList
+                        categories={categories}
+                        onRemove={handleRemoveCategory}
+                        form={form}
+                      />
+                    </Suspense>
                   </div>
                 </FormControl>
                 <FormMessage />

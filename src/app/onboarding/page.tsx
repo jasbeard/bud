@@ -81,16 +81,6 @@ const defaultPreset: CyclePreset = {
   type: "monthly",
 };
 
-const defaultCategories = [
-  "Groceries",
-  "Transportation",
-  "Rent",
-  "Personal Allowance",
-  "Internet",
-  "Investment",
-  "Salary",
-];
-
 // Helper functions to convert between step names and indices
 const getStepIndexFromName = (stepName: string): number | null => {
   const index = onboardingSteps.findIndex((step) => step.id === stepName);
@@ -136,7 +126,7 @@ export default function Page() {
       cycles: [],
       maxCycles: 2,
       cycleType: "monthly",
-      categories: defaultCategories,
+      categories: [],
     },
   });
 
@@ -281,10 +271,20 @@ export default function Page() {
           endDate: cycle.to?.getDate() || 31,
         })) || [];
 
-      // Filter out default categories, only send newly added ones
+      // Get default categories to filter them out
+      // Only send newly added categories (not default ones)
+      const defaultCategoriesResponse = await fetch("/api/default-categories");
+      let defaultCategoryNames: string[] = [];
+      if (defaultCategoriesResponse.ok) {
+        const defaultCategoriesData = await defaultCategoriesResponse.json();
+        defaultCategoryNames = defaultCategoriesData.map(
+          (cat: { name: string }) => cat.name
+        );
+      }
+
       const formCategories = formData.categories || [];
       const newCategories = formCategories.filter(
-        (category) => !defaultCategories.includes(category)
+        (category) => !defaultCategoryNames.includes(category)
       );
 
       const onboardingData = {
@@ -371,12 +371,7 @@ export default function Page() {
 
       case 2:
         return (
-          <CategoriesStep
-            form={form}
-            defaultCategories={defaultCategories}
-            error={error}
-            isLoading={isLoading}
-          />
+          <CategoriesStep form={form} error={error} isLoading={isLoading} />
         );
 
       default:
@@ -487,9 +482,7 @@ export default function Page() {
                   disabled={
                     isLoading ||
                     isCheckingExisting ||
-                    (form.getValues("categories") || []).filter(
-                      (category) => !defaultCategories.includes(category)
-                    ).length > 0
+                    (form.getValues("categories") || []).length === 0
                   }
                 >
                   Skip
