@@ -6,6 +6,7 @@ import {
   budgetCycles,
   budgetCycleTimeline,
   categories,
+  users,
 } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -164,6 +165,22 @@ export async function POST(request: NextRequest) {
       }));
 
       await db.insert(categories).values(categoryEntries);
+    }
+
+    // Update onboardedAt timestamp if not already set
+    // (For existing users who completed onboarding before this field existed,
+    // use the backfill script: yarn db:backfill:onboarded-at)
+    const existingUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (existingUser.length > 0 && !existingUser[0].onboardedAt) {
+      await db
+        .update(users)
+        .set({ onboardedAt: new Date() })
+        .where(eq(users.id, userId));
     }
 
     console.log("Onboarding completed successfully for user:", userId);
