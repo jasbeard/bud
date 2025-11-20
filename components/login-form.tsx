@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { authClient } from "@/lib/auth-client";
+import { Spinner } from "@/components/ui/spinner";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email address"),
@@ -50,8 +51,28 @@ export function LoginForm({
           message: result.error.message || "Login failed",
         });
       } else {
-        // Redirect to login page or show success message
-        router.push("/dashboard");
+        // Check onboarding status after successful authentication
+        try {
+          const onboardingResponse = await fetch("/api/onboarding");
+
+          if (onboardingResponse.ok) {
+            const { isOnboarded } = await onboardingResponse.json();
+
+            // Redirect based on onboarding status
+            if (isOnboarded) {
+              router.push("/budget");
+            } else {
+              router.push("/onboarding");
+            }
+          } else {
+            // If we can't check onboarding status, default to onboarding
+            router.push("/onboarding");
+          }
+        } catch (error) {
+          // If there's an error checking onboarding status, default to onboarding
+          console.error("Error checking onboarding status:", error);
+          router.push("/onboarding");
+        }
       }
     } catch {
       form.setError("root", {
@@ -118,7 +139,14 @@ export function LoginForm({
             className="w-full"
             disabled={form.formState.isSubmitting}
           >
-            {form.formState.isSubmitting ? "Logging Account..." : "Login"}
+            {form.formState.isSubmitting ? (
+              <>
+                <Spinner className="mr-2 size-4" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
           </Button>
         </form>
       </Form>
