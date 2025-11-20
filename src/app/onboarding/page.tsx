@@ -183,6 +183,9 @@ export default function Page() {
           return;
         }
 
+        // Note: Onboarding status check is handled in middleware
+        // This only checks for partial progress to pre-populate the form
+
         // Check for existing budget spaces
         const budgetspaceResponse = await fetch("/api/budgetspaces");
         let budgetspaceExists = false;
