@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/sidebar";
 import { BudgetSpaceSwitcher } from "./budget-space-switcher";
 import { NavSettings } from "./nav-settings";
+import { AppPages } from "@/lib/types";
 
 const data = {
   budgetSpace: [
@@ -62,12 +63,12 @@ const data = {
   navMain: [
     {
       title: "Overview",
-      url: "/dashboard",
+      url: AppPages.DASHBOARD,
       mainIcon: IconDashboard,
     },
     {
       title: "Budget",
-      url: "/budget",
+      url: AppPages.BUDGET,
       mainIcon: IconCoins,
       actionIcon: IconDotsVertical,
     },
@@ -160,7 +161,7 @@ const data = {
     },
     {
       name: "Budget Cycle",
-      url: "#",
+      url: AppPages.BUDGETCYCLE,
       icon: IconCalendarRepeat,
     },
     {

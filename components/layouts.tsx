@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeader } from "@/components/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { PageOnboarding } from "@/components/page-onboarding";
 
 export function BlankLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
@@ -34,6 +35,7 @@ export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div> */}
         {children}
+        <PageOnboarding />
       </SidebarInset>
     </SidebarProvider>
   );
