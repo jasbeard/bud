@@ -21,13 +21,23 @@ import {
 } from "lucide-react";
 import { usePagePath } from "@/lib/utils";
 import { AppPages } from "@/lib/types";
+import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
 
 export function OnboardingPopover() {
   const path = usePagePath({ mode: "path" }) as AppPages;
   const exemptedPaths = [AppPages.HOME, AppPages.ONBOARDING];
-  console.log("onboardingpopover: ", path);
+  const { isOnboarded, isLoading } = useOnboardingStatus();
+
+  // Don't render on exempted paths
   if (exemptedPaths.includes(path)) return null;
 
+  // Show nothing while loading
+  if (isLoading) return null;
+
+  // Hide popover if user is already onboarded
+  if (isOnboarded) return null;
+
+  // Show popover if user is not onboarded
   return <BaseOnboardingPopover />;
 }
 

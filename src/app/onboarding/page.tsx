@@ -187,6 +187,9 @@ export default function Page() {
         // This only checks for partial progress to pre-populate the form
 
         // Check for existing budget spaces
+
+        // TODO: move away from useEffect and use swr
+        // sample implementation at @/hooks/use-onboarding-status
         const budgetspaceResponse = await fetch("/api/budgetspaces");
         let budgetspaceExists = false;
 
@@ -204,6 +207,8 @@ export default function Page() {
         }
 
         // Check for existing budget cycles
+        // TODO: move away from useEffect and use swr
+        // sample implementation at @/hooks/use-onboarding-status
         const cyclesResponse = await fetch("/api/budgetcycles");
         let cyclesExist = false;
         if (cyclesResponse.ok) {
