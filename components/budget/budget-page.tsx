@@ -32,6 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "../combobox";
+import { toast } from "sonner";
 
 interface CategoryItem {
   name: string;
@@ -146,6 +147,7 @@ function ExpenseSection({ onClose }: { onClose?: () => void }) {
         setAllocation("");
         setCategoryType("expense");
         setIsDialogOpen(false);
+        toast.success(`${selectedCategory} has been added`);
       }
     }
   };
