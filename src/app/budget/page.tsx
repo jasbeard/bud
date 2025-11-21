@@ -1,9 +1,5 @@
-import { EmptyBudget } from "@/components/empty-budget";
+import { BudgetPage } from "@/components/budget/budget-page";
 
 export default async function Page() {
-  return (
-    <>
-      <EmptyBudget />
-    </>
-  );
+  return <BudgetPage />;
 }

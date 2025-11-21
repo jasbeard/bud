@@ -1,3 +1,5 @@
+"use client";
+
 import { IconCoins } from "@tabler/icons-react";
 import { ArrowUpRightIcon } from "lucide-react";
 
@@ -10,9 +12,12 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { CreateBudgetDialog } from "./create-budget-dialog";
 
-export function EmptyBudget() {
+interface EmptyBudgetProps {
+  onCreateBudget?: () => void;
+}
+
+export function EmptyBudget({ onCreateBudget }: EmptyBudgetProps) {
   return (
     <Empty>
       <EmptyHeader>
@@ -27,11 +32,9 @@ export function EmptyBudget() {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <CreateBudgetDialog>
-            <Button size="sm" className="cursor-pointer">
-              Create Budget
-            </Button>
-          </CreateBudgetDialog>
+          <Button size="sm" className="cursor-pointer" onClick={onCreateBudget}>
+            Create Budget
+          </Button>
 
           <Button variant="outline">Import Project</Button>
         </div>

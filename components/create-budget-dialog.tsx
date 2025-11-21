@@ -53,6 +53,7 @@ const categories = [
   },
 ];
 
+//TODO: Deprecate
 export function CreateBudgetDialog({
   children,
 }: {
