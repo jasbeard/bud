@@ -20,7 +20,6 @@ import {
   IconFileExport,
   IconAdjustmentsCog,
   IconCalendarRepeat,
-  IconPlus,
   IconDotsVertical,
 } from "@tabler/icons-react";
 
