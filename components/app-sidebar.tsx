@@ -8,14 +8,11 @@ import {
   IconFileAi,
   IconFileDescription,
   IconHelp,
-  IconInnerShadowTop,
   IconSearch,
   IconUsers,
   IconCoins,
   IconPigMoney,
   IconInvoice,
-  IconDeviceAudioTape,
-  IconCommand,
   IconCategory2,
   IconFileExport,
   IconAdjustmentsCog,
@@ -32,28 +29,14 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { BudgetSpaceSwitcher } from "./budget-space-switcher";
+import {
+  BudgetSpaceSwitcherSkeleton,
+  BudgetSpaceSwitcherWithSuspense,
+} from "./budget-space-switcher-wrapper";
 import { NavSettings } from "./nav-settings";
 import { AppPages } from "@/lib/types";
 
 const data = {
-  budgetSpace: [
-    {
-      name: "Household",
-      logo: IconInnerShadowTop,
-      plan: "Pro",
-    },
-    {
-      name: "Travel",
-      logo: IconDeviceAudioTape,
-      plan: "Basic",
-    },
-    {
-      name: "Personal",
-      logo: IconCommand,
-      plan: "Lifetime",
-    },
-  ],
   user: {
     name: "Jason",
     email: "me@jasonbarba.com",
@@ -180,7 +163,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
-        <BudgetSpaceSwitcher spaces={data.budgetSpace} />
+        <BudgetSpaceSwitcherWithSuspense />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

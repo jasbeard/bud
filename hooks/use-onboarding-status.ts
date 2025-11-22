@@ -38,7 +38,6 @@ export function useOnboardingStatus(enabled: boolean = true) {
       shouldRetryOnError: false,
     }
   );
-  console.log("useOnboardingStatus:");
   return {
     isOnboarded: data?.isOnboarded ?? false,
     isLoading,

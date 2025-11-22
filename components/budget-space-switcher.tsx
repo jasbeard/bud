@@ -65,7 +65,7 @@ export function BudgetSpaceSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Teams
+              Budgetspace
             </DropdownMenuLabel>
             {spaces.map((space, index) => (
               <DropdownMenuItem
@@ -86,7 +86,7 @@ export function BudgetSpaceSwitcher({
                 <Plus className="size-4" />
               </div>
               <div className="text-muted-foreground font-medium">
-                Add budget space
+                Add Budgetspace
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
