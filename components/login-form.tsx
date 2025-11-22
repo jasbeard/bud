@@ -53,7 +53,7 @@ export function LoginForm({
       } else {
         // Check onboarding status after successful authentication
         try {
-          const onboardingResponse = await fetch("/api/onboarding");
+          const onboardingResponse = await fetch("/api/user");
 
           if (onboardingResponse.ok) {
             const { isOnboarded } = await onboardingResponse.json();

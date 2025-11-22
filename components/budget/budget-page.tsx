@@ -12,7 +12,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { XIcon, PlusIcon } from "lucide-react";
+import { XIcon, PlusIcon, PencilIcon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -157,7 +157,19 @@ function ExpenseSection({ onClose }: { onClose?: () => void }) {
       <CardHeader>
         <CardTitle className="mt-0.5">Expense</CardTitle>
         {onClose && (
-          <CardAction>
+          <CardAction className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // TODO: Implement edit functionality
+                toast.info("Edit functionality coming soon");
+              }}
+              className="h-6 w-6 cursor-pointer"
+            >
+              <PencilIcon className="h-4 w-4 text-muted-foreground" />
+              <span className="sr-only">Edit</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon"

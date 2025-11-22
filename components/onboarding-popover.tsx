@@ -26,10 +26,13 @@ import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
 export function OnboardingPopover() {
   const path = usePagePath({ mode: "path" }) as AppPages;
   const exemptedPaths = [AppPages.HOME, AppPages.ONBOARDING];
-  const { isOnboarded, isLoading } = useOnboardingStatus();
+
+  // Only fetch onboarding status when not on exempted paths
+  const shouldFetch = !exemptedPaths.includes(path);
+  const { isOnboarded, isLoading } = useOnboardingStatus(shouldFetch);
 
   // Don't render on exempted paths
-  if (exemptedPaths.includes(path)) return null;
+  if (!shouldFetch) return null;
 
   // Show nothing while loading
   if (isLoading) return null;

@@ -13,6 +13,12 @@ const publicRoutes: string[] = [AppPages.LOGIN, AppPages.SIGNUP, AppPages.HOME];
 export default async function middleware(req: NextRequest) {
   // 2. Check if the current route is protected or public
   const path = req.nextUrl.pathname;
+
+  // Skip middleware for API routes (should be handled by matcher, but extra safety check)
+  if (path.startsWith("/api")) {
+    return NextResponse.next();
+  }
+
   const isProtectedRoute = protectedRoutes.includes(path);
   const isPublicRoute = publicRoutes.includes(path);
 
@@ -25,11 +31,13 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 5. Check onboarding status only when navigating to /onboarding
+  // Only call API when explicitly on the onboarding page
   if (sessionCookie && path === AppPages.ONBOARDING) {
     try {
-      // Call the onboarding API endpoint to check status
+      console.log("Middleware");
+      // Call the user API endpoint to check onboarding status
       // Forward all headers to ensure session is properly authenticated
-      const apiUrl = new URL("/api/onboarding", req.nextUrl.origin);
+      const apiUrl = new URL("/api/user", req.nextUrl.origin);
       const headers = new Headers();
       req.headers.forEach((value, key) => {
         headers.set(key, value);

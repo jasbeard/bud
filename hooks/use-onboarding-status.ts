@@ -23,11 +23,12 @@ async function fetcher(url: string): Promise<OnboardingStatus> {
 
 /**
  * Hook to check user onboarding status
+ * @param enabled - Whether to fetch the onboarding status. Defaults to true.
  * @returns Object with onboarding status and loading state
  */
-export function useOnboardingStatus() {
+export function useOnboardingStatus(enabled: boolean = true) {
   const { data, error, isLoading } = useSWR<OnboardingStatus>(
-    "/api/onboarding",
+    enabled ? "/api/user" : null,
     fetcher,
     {
       // Only fetch if we're on the client side
@@ -37,7 +38,7 @@ export function useOnboardingStatus() {
       shouldRetryOnError: false,
     }
   );
-
+  console.log("useOnboardingStatus:");
   return {
     isOnboarded: data?.isOnboarded ?? false,
     isLoading,
