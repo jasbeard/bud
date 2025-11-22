@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { budgetCycles, budgetCycleTimeline, budgetspaces } from "@/lib/schema";
+import { budgetCycles, budgetCycleTimelines, budgetspaces } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -69,8 +69,8 @@ export async function GET(
     // Even monthly cycles might have timeline entries if dates were provided
     const dates = await db
       .select()
-      .from(budgetCycleTimeline)
-      .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
+      .from(budgetCycleTimelines)
+      .where(eq(budgetCycleTimelines.budgetCycleId, params.id));
 
     return NextResponse.json({
       ...budgetcycle[0],
@@ -136,8 +136,8 @@ export async function PUT(
     if (validatedData.dates) {
       // Delete existing dates
       await db
-        .delete(budgetCycleTimeline)
-        .where(eq(budgetCycleTimeline.budgetCycleId, params.id));
+        .delete(budgetCycleTimelines)
+        .where(eq(budgetCycleTimelines.budgetCycleId, params.id));
 
       // Insert new dates if provided
       if (validatedData.dates.length > 0) {
@@ -149,7 +149,7 @@ export async function PUT(
           order: index + 1,
         }));
 
-        await db.insert(budgetCycleTimeline).values(dateEntries);
+        await db.insert(budgetCycleTimelines).values(dateEntries);
       }
     }
 

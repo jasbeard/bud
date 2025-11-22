@@ -183,6 +183,13 @@
       "when": 1763309218494,
       "tag": "0025_ambiguous_tana_nile",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1763794088362,
+      "tag": "0026_sticky_gabe_jones",
+      "breakpoints": true
     }
   ]
 }

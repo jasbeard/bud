@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { budgetCycles, budgetCycleTimeline, budgetspaces } from "@/lib/schema";
+import { budgetCycles, budgetCycleTimelines, budgetspaces } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
         order: index + 1,
       }));
 
-      await db.insert(budgetCycleTimeline).values(dateEntries);
+      await db.insert(budgetCycleTimelines).values(dateEntries);
     }
 
     console.log("Created a new budgetcycle: ", body);

@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import {
   budgetspaces,
   budgetCycles,
-  budgetCycleTimeline,
+  budgetCycleTimelines,
   categories,
   users,
 } from "@/lib/schema";
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
           };
         });
 
-        await db.insert(budgetCycleTimeline).values(dateEntries);
+        await db.insert(budgetCycleTimelines).values(dateEntries);
       }
     }
 

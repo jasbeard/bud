@@ -134,7 +134,7 @@ export const budgetCycles = pgTable("budget_cycles", {
 });
 
 // Budget cycle timeline table (for custom cycles with multiple date ranges)
-export const budgetCycleTimeline = pgTable("budget_cycle_timeline", {
+export const budgetCycleTimelines = pgTable("budget_cycle_timelines", {
   id: uuid("id").primaryKey().defaultRandom(),
   budgetCycleId: uuid("budget_cycle_id")
     .notNull()
@@ -152,7 +152,7 @@ export const budgetCycleTimeline = pgTable("budget_cycle_timeline", {
 // Budgets table
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().defaultRandom(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   period: text("period", { enum: ["monthly", "weekly", "yearly"] }).notNull(),
   categoryId: uuid("category_id")
     .notNull()
@@ -173,7 +173,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   sessions: many(sessions),
   accounts: many(accounts),
   budgetCycles: many(budgetCycles),
-  budgetCycleTimeline: many(budgetCycleTimeline),
+  budgetCycleTimelines: many(budgetCycleTimelines),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
@@ -236,19 +236,19 @@ export const budgetCyclesRelations = relations(
       references: [budgetspaces.id],
     }),
     budgets: many(budgets),
-    timeline: many(budgetCycleTimeline),
+    timeline: many(budgetCycleTimelines),
   })
 );
 
 export const budgetCycleTimelineRelations = relations(
-  budgetCycleTimeline,
+  budgetCycleTimelines,
   ({ one }) => ({
     user: one(users, {
-      fields: [budgetCycleTimeline.userId],
+      fields: [budgetCycleTimelines.userId],
       references: [users.id],
     }),
     budgetCycle: one(budgetCycles, {
-      fields: [budgetCycleTimeline.budgetCycleId],
+      fields: [budgetCycleTimelines.budgetCycleId],
       references: [budgetCycles.id],
     }),
   })
