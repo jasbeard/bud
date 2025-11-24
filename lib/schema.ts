@@ -167,6 +167,21 @@ export const budgets = pgTable("budgets", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Budget categories table
+export const budgetCategories = pgTable("budget_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  categoryId: uuid("category_id")
+    .notNull()
+    .references(() => categories.id, { onDelete: "cascade" }),
+  allocationAmount: decimal("allocation_amount", {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
+  allocationType: text("allocation_type", {
+    enum: ["expense", "income"],
+  }).notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   budgetspaces: many(budgetspaces),
