@@ -154,9 +154,9 @@ export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().defaultRandom(),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   period: text("period", { enum: ["monthly", "weekly", "yearly"] }).notNull(),
-  categoryId: uuid("category_id")
+  budgetCategoryId: uuid("budget_category_id")
     .notNull()
-    .references(() => categories.id, { onDelete: "cascade" }),
+    .references(() => budgetCategories.id, { onDelete: "cascade" }),
   budgetspaceId: uuid("budgetspace_id")
     .notNull()
     .references(() => budgetspaces.id, { onDelete: "cascade" }),
@@ -180,7 +180,20 @@ export const budgetCategories = pgTable("budget_categories", {
   allocationType: text("allocation_type", {
     enum: ["expense", "income"],
   }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
 });
+
+export const budgetCategoriesRelations = relations(
+  budgetCategories,
+  ({ one, many }) => ({
+    category: one(categories, {
+      fields: [budgetCategories.categoryId],
+      references: [categories.id],
+    }),
+    budgets: many(budgets),
+  })
+);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -225,7 +238,7 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
     references: [budgetspaces.id],
   }),
   transactions: many(transactions),
-  budgets: many(budgets),
+  budgetCategories: many(budgetCategories),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
@@ -270,9 +283,9 @@ export const budgetCycleTimelineRelations = relations(
 );
 
 export const budgetsRelations = relations(budgets, ({ one }) => ({
-  category: one(categories, {
-    fields: [budgets.categoryId],
-    references: [categories.id],
+  budgetCategory: one(budgetCategories, {
+    fields: [budgets.budgetCategoryId],
+    references: [budgetCategories.id],
   }),
   budgetspace: one(budgetspaces, {
     fields: [budgets.budgetspaceId],
