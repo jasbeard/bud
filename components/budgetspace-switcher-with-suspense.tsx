@@ -14,7 +14,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { BudgetSpaceSwitcher } from "./budget-space-switcher";
+import { BudgetSpaceSwitcher } from "./budgetspace-switcher";
 
 // Icon mapping function - maps budgetspace names to icons
 const getIconForBudgetSpace = (name: string) => {
@@ -71,6 +71,7 @@ export function BudgetSpaceSwitcherSkeleton() {
 }
 
 function BudgetSpaceSwitcherContent() {
+  // TODO: fix fetching 2nd level path navigation e.g settings/general -> settings/budgetcycle
   const { data, error } = useSWR<BudgetSpacesResponse>(
     "/api/budgetspaces/all",
     fetcher,

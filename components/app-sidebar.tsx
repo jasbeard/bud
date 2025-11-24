@@ -29,10 +29,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import {
-  BudgetSpaceSwitcherSkeleton,
-  BudgetSpaceSwitcherWithSuspense,
-} from "./budget-space-switcher-wrapper";
+import { BudgetSpaceSwitcherWithSuspense } from "./budget-space-switcher-wrapper";
 import { NavSettings } from "./nav-settings";
 import { AppPages } from "@/lib/types";
 
@@ -138,12 +135,12 @@ const data = {
   settings: [
     {
       name: "General",
-      url: "#",
+      url: AppPages.GENERAL_SETTINGS,
       icon: IconAdjustmentsCog,
     },
     {
       name: "Budget Cycle",
-      url: AppPages.BUDGETCYCLE,
+      url: AppPages.BUDGETCYCLE_SETTINGS,
       icon: IconCalendarRepeat,
     },
     {

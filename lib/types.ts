@@ -7,7 +7,11 @@ export enum AppPages {
   LOGIN = "/login",
   SIGNUP = "/signup",
   ONBOARDING = "/onboarding",
-  BUDGETCYCLE = "/budgetcycle",
+
+  // settings
+  GENERAL_SETTINGS = "/settings/general",
+  BUDGETCYCLE_SETTINGS = "/settings/budgetcycle",
+
   // Dynamic routes - use template literal for dynamic parts
   BUDGETSPACE = "/budgetspaces",
 }
