@@ -211,6 +211,13 @@
       "when": 1764000554465,
       "tag": "0029_puzzling_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1764157240971,
+      "tag": "0030_naive_red_hulk",
+      "breakpoints": true
     }
   ]
 }
