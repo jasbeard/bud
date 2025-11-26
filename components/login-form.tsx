@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/db/auth-client";
 import { Spinner } from "@/components/ui/spinner";
 
 const loginSchema = z.object({

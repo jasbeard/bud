@@ -21,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/db/auth-client";
 
 const signupSchema = z.object({
   name: z.string(),

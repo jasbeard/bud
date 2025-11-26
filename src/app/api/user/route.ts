@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { users } from "@/lib/schema";
+import { db } from "@/db/db";
+import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 
 // GET /api/user - Check if user is already onboarded
 export async function GET() {

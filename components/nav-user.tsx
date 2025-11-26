@@ -24,7 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/db/auth-client";
 import { useRouter } from "next/navigation";
 
 function getInitials(name: string): string {

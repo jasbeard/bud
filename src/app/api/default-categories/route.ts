@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { defaultCategories } from "@/lib/schema";
-import { auth } from "@/lib/auth";
+import { db } from "@/db/db";
+import { defaultCategories } from "@/db/schema";
+import { auth } from "@/db/auth";
 
 /* GET /api/default-categories - Get all default categories
   Returns all default categories from the database.

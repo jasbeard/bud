@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { categories, budgetspaces, defaultCategories } from "@/lib/schema";
+import { db } from "@/db/db";
+import { categories, budgetspaces, defaultCategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 
 /* GET /api/categories - Get both default categories and user categories for a budgetspace
   Query parameters:

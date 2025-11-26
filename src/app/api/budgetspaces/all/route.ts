@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { budgetspaces, users } from "@/lib/schema";
+import { db } from "@/db/db";
+import { budgetspaces, users } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 
 /* GET /api/budgetspaces/all - Get all budgetspaces for authenticated user with user plan
   Returns all budgetspaces for the authenticated user along with the user's plan.

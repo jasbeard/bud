@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { budgetCycles, budgetCycleTimelines, budgetspaces } from "@/lib/schema";
+import { db } from "@/db/db";
+import { budgetCycles, budgetCycleTimelines, budgetspaces } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 
 const updateBudgetCycleSchema = z.object({
   type: z

@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { users, budgetspaces, budgetCycles } from "../lib/schema";
+import { users, budgetspaces, budgetCycles } from "../db/schema";
 import { eq, isNull } from "drizzle-orm";
 import * as dotenv from "dotenv";
 

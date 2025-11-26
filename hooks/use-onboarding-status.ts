@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/db/auth-client";
 
 type OnboardingStatus = {
   isOnboarded: boolean;

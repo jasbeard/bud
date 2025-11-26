@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/db";
+import { db } from "@/db/db";
 import {
   budgetspaces,
   budgetCycles,
   budgetCycleTimelines,
   categories,
   users,
-} from "@/lib/schema";
+} from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 import { headers } from "next/headers";
 
 // Cycle preset names that the frontend can send

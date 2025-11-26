@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/db/auth-client";
 
 import { CyclePreset, presetToDateRanges } from "@/lib/utils";
 import { BudgetCycleStep } from "@/components/onboarding/budget-cycle-step";

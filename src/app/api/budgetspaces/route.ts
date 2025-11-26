@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-import { db } from "@/lib/db";
-import { budgetspaces } from "@/lib/schema";
+import { db } from "@/db/db";
+import { budgetspaces } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { auth } from "@/db/auth";
 
 const createBudgetspaceSchema = z.object({
   name: z.string().min(1).max(50),
