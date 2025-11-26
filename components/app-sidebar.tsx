@@ -29,7 +29,7 @@ import {
   SidebarFooter,
   SidebarHeader,
 } from "@/components/ui/sidebar";
-import { BudgetSpaceSwitcherWithSuspense } from "./budget-space-switcher-wrapper";
+import { BudgetSpaceSwitcherWithSuspense } from "./budgetspace-switcher-with-suspense";
 import { NavSettings } from "./nav-settings";
 import { AppPages } from "@/lib/types";
 
