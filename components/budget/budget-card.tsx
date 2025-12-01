@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import { useState, useMemo, Suspense } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -40,7 +40,10 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "../combobox";
 import { toast } from "sonner";
-import { BudgetSpaceProvider } from "@/contexts/budgetspace-context";
+import {
+  BudgetSpaceProvider,
+  useBudgetspace,
+} from "@/contexts/budgetspace-context";
 
 interface CategoryItem {
   name: string;
@@ -75,32 +78,22 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-export function ExpenseSection({
-  onClose,
-  currentBudgetspaceId,
-}: {
-  onClose?: () => void;
-  currentBudgetspaceId: string | null;
-}) {
+export function BudgetCard({ onClose }: { onClose?: () => void }) {
   return (
-    <Suspense fallback="loading...">
-      <BudgetSpaceProvider>
-        <BaseExpenseSection
-          onClose={onClose}
-          currentBudgetspaceId={currentBudgetspaceId}
-        />
-      </BudgetSpaceProvider>
-    </Suspense>
+    <BudgetSpaceProvider>
+      <BaseBudgetCard name="Sample" onClose={onClose} />
+    </BudgetSpaceProvider>
   );
 }
 
-function BaseExpenseSection({
+function BaseBudgetCard({
+  name,
   onClose,
-  currentBudgetspaceId,
 }: {
+  name: string;
   onClose?: () => void;
-  currentBudgetspaceId: string | null;
 }) {
+  const { currentBudgetspaceId } = useBudgetspace();
   const [addedCategories, setAddedCategories] = useState<
     CategoryWithAllocation[]
   >([]);
@@ -246,7 +239,7 @@ function BaseExpenseSection({
   return (
     <Card className="md:w-[320px] md:min-h-[120px] border rounded m-4 relative">
       <CardHeader>
-        <CardTitle className="mt-0.5">Expense</CardTitle>
+        <CardTitle className="mt-0.5">{name}</CardTitle>
         {onClose && (
           <CardAction className="flex items-center gap-1">
             <Button

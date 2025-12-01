@@ -12,6 +12,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { CreateBudgetDialog } from "@/components/budget/create-budget-dialog";
 
 interface EmptyBudgetProps {
   onCreateBudget?: () => void;
@@ -32,9 +33,11 @@ export function EmptyBudget({ onCreateBudget }: EmptyBudgetProps) {
       </EmptyHeader>
       <EmptyContent>
         <div className="flex gap-2">
-          <Button size="sm" className="cursor-pointer" onClick={onCreateBudget}>
-            Create Budget
-          </Button>
+          <CreateBudgetDialog>
+            <Button size="sm" className="cursor-pointer">
+              Create Budget
+            </Button>
+          </CreateBudgetDialog>
 
           <Button variant="outline">Import Project</Button>
         </div>

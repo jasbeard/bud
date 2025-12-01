@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
-import { ExpenseSection } from "./expense-section";
+import { BudgetCard } from "./budget-card";
+import { BudgetCardSkeleton } from "./budget-card-skeleton";
+import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
   BudgetSpaceProvider,
   useBudgetspace,
@@ -10,7 +12,7 @@ import {
 
 function BudgetPageContent() {
   const [showMainContent, setMainContent] = useState(false);
-  const { currentBudgetspaceId } = useBudgetspace();
+  const { budgets } = useBudgets();
 
   const handleOnCreateBudet = () => {
     setMainContent(true);
@@ -19,30 +21,48 @@ function BudgetPageContent() {
     setMainContent(false);
   };
 
-  // currentBudgetSpaceId is now available here
-  // It returns the default budgetspace ID
-
-  console.log("BugetPageContent: ", currentBudgetspaceId);
+  // Show empty state if no budgets exist
+  const hasBudgets = budgets.length > 0;
+  const shouldShowEmpty = !hasBudgets && !showMainContent;
 
   return (
     <>
-      {showMainContent ? (
-        <ExpenseSection
-          onClose={handleCloseExpense}
-          currentBudgetspaceId={currentBudgetspaceId}
-        />
+      {showMainContent || hasBudgets ? (
+        <BudgetCard onClose={handleCloseExpense} />
       ) : null}
-      {!showMainContent ? (
+      {shouldShowEmpty ? (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />
       ) : null}
     </>
   );
 }
 
+function BudgetPageInner() {
+  const { currentBudgetspaceId } = useBudgetspace();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // During SSR, show skeleton. Once mounted on client, use Suspense
+  if (!isMounted) {
+    return <BudgetCardSkeleton />;
+  }
+
+  return (
+    <Suspense fallback={<BudgetCardSkeleton />}>
+      <BudgetProvider budgetspaceId={currentBudgetspaceId ?? undefined}>
+        <BudgetPageContent />
+      </BudgetProvider>
+    </Suspense>
+  );
+}
+
 export function BudgetPage() {
   return (
     <BudgetSpaceProvider>
-      <BudgetPageContent />
+      <BudgetPageInner />
     </BudgetSpaceProvider>
   );
 }
