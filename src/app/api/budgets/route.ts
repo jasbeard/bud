@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/db/db";
-import {
-  budgets,
-  budgetspaces,
-  budgetCategories,
-  categories,
-} from "@/db/schema";
+import { budgets, budgetspaces, budgetCategories } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
@@ -23,7 +18,7 @@ const createBudgetSchema = z.object({
   Request body:
     - name: string (budget name, required)
     - totalAmount: number (optional, defaults to 0)
-    - budgetCategoryId: string (optional, but required for budget creation)
+    - budgetCategoryId: string (optional, can be null)
     - budgetspaceId: string (optional, defaults to user's default budgetspace)
     - budgetCycleId: string (optional)
   
@@ -94,8 +89,8 @@ export async function POST(request: NextRequest) {
       targetBudgetspaceId = defaultBudgetspace[0].id;
     }
 
-    // Get or validate budgetCategoryId
-    let targetBudgetCategoryId: string;
+    // Validate budgetCategoryId if provided
+    let targetBudgetCategoryId: string | null = null;
 
     if (validatedData.budgetCategoryId) {
       // Verify budgetCategoryId exists
@@ -113,26 +108,6 @@ export async function POST(request: NextRequest) {
       }
 
       targetBudgetCategoryId = validatedData.budgetCategoryId;
-    } else {
-      // Try to get the first budget category for the budgetspace
-      const firstBudgetCategory = await db
-        .select({ id: budgetCategories.id })
-        .from(budgetCategories)
-        .innerJoin(categories, eq(budgetCategories.categoryId, categories.id))
-        .where(eq(categories.budgetspaceId, targetBudgetspaceId))
-        .limit(1);
-
-      if (firstBudgetCategory.length === 0) {
-        return NextResponse.json(
-          {
-            error:
-              "No budget categories found. Please create a budget category first.",
-          },
-          { status: 400 }
-        );
-      }
-
-      targetBudgetCategoryId = firstBudgetCategory[0].id;
     }
 
     // Create the budget
@@ -141,7 +116,7 @@ export async function POST(request: NextRequest) {
       .values({
         name: validatedData.name,
         totalAmount: (validatedData.totalAmount ?? 0).toString(),
-        budgetCategoryId: targetBudgetCategoryId,
+        budgetCategoryId: targetBudgetCategoryId ?? null,
         budgetspaceId: targetBudgetspaceId,
         budgetCycleId: validatedData.budgetCycleId ?? null,
       })

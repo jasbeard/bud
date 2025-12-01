@@ -154,9 +154,10 @@ export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
-  budgetCategoryId: uuid("budget_category_id")
-    .notNull()
-    .references(() => budgetCategories.id, { onDelete: "cascade" }),
+  budgetCategoryId: uuid("budget_category_id").references(
+    () => budgetCategories.id,
+    { onDelete: "cascade" }
+  ),
   budgetspaceId: uuid("budgetspace_id")
     .notNull()
     .references(() => budgetspaces.id, { onDelete: "cascade" }),

@@ -225,6 +225,13 @@
       "when": 1764575619282,
       "tag": "0031_furry_jazinda",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1764606064189,
+      "tag": "0032_tough_madame_masque",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "budgets" ALTER COLUMN "budget_category_id" DROP NOT NULL;

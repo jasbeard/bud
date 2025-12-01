@@ -100,7 +100,11 @@ export function BudgetSpaceProvider({
   // Use useLayoutEffect for synchronous updates before paint
   React.useLayoutEffect(() => {
     if (data) {
-      setBudgetSpacesData(data);
+      try {
+        setBudgetSpacesData(data);
+      } catch (error) {
+        console.error("Error setting budget spaces data:", error);
+      }
     }
   }, [data, setBudgetSpacesData]);
 
