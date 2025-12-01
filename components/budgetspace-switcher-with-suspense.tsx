@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Suspense, useState, useEffect } from "react";
-import useSWR from "swr";
 import {
   IconInnerShadowTop,
   IconDeviceAudioTape,
@@ -15,6 +14,10 @@ import {
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
 import { BudgetSpaceSwitcher } from "./budgetspace-switcher";
+import {
+  BudgetSpaceProvider,
+  useBudgetspace,
+} from "@/contexts/budgetspace-context";
 
 // Icon mapping function - maps budgetspace names to icons
 const getIconForBudgetSpace = (name: string) => {
@@ -27,32 +30,6 @@ const getIconForBudgetSpace = (name: string) => {
   // Return mapped icon or default icon
   return iconMap[name] || IconCategory2;
 };
-
-interface BudgetSpace {
-  id: string;
-  name: string;
-  description: string | null;
-  userId: string;
-  isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date | null;
-}
-
-interface BudgetSpacesResponse {
-  spaces: BudgetSpace[];
-  plan: string;
-}
-
-async function fetcher(url: string): Promise<BudgetSpacesResponse> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    if (response.status === 401) {
-      return { spaces: [], plan: "Basic" };
-    }
-    throw new Error("Failed to fetch budgetspaces");
-  }
-  return response.json();
-}
 
 export function BudgetSpaceSwitcherSkeleton() {
   return (
@@ -71,31 +48,23 @@ export function BudgetSpaceSwitcherSkeleton() {
 }
 
 function BudgetSpaceSwitcherContent() {
-  // TODO: fix fetching 2nd level path navigation e.g settings/general -> settings/budgetcycle
-  const { data, error } = useSWR<BudgetSpacesResponse>(
-    "/api/budgetspaces/all",
-    fetcher,
-    {
-      suspense: true,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      shouldRetryOnError: false,
-      fallbackData: undefined, // Explicitly set to undefined to avoid SSR issues
-    }
-  );
+  const { spaces, plan, error } = useBudgetspace();
 
-  if (error || !data || data.spaces.length === 0) {
-    return null;
+  // With Suspense, data should be loaded when this renders
+  // For empty/error state, show skeleton to maintain consistent layout
+  // This prevents layout shifts when transitioning from loading to empty state
+  if (error || !spaces || spaces.length === 0) {
+    return <BudgetSpaceSwitcherSkeleton />;
   }
 
   // Map to the format expected by BudgetSpaceSwitcher
-  const spaces = data.spaces.map((space) => ({
+  const mappedSpaces = spaces.map((space) => ({
     name: space.name,
     logo: getIconForBudgetSpace(space.name),
-    plan: data.plan || "Basic",
+    plan: plan || "Basic",
   }));
 
-  return <BudgetSpaceSwitcher spaces={spaces} />;
+  return <BudgetSpaceSwitcher spaces={mappedSpaces} />;
 }
 
 export function BudgetSpaceSwitcherWithSuspense() {
@@ -112,7 +81,9 @@ export function BudgetSpaceSwitcherWithSuspense() {
 
   return (
     <Suspense fallback={<BudgetSpaceSwitcherSkeleton />}>
-      <BudgetSpaceSwitcherContent />
+      <BudgetSpaceProvider>
+        <BudgetSpaceSwitcherContent />
+      </BudgetSpaceProvider>
     </Suspense>
   );
 }
