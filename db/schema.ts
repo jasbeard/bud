@@ -152,6 +152,7 @@ export const budgetCycleTimelines = pgTable("budget_cycle_timelines", {
 // Budgets table
 export const budgets = pgTable("budgets", {
   id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
   budgetCategoryId: uuid("budget_category_id")
     .notNull()
@@ -172,6 +173,7 @@ export const budgetCategories = pgTable("budget_categories", {
   categoryId: uuid("category_id")
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
   allocationAmount: decimal("allocation_amount", {
     precision: 10,
     scale: 2,

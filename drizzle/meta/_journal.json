@@ -218,6 +218,13 @@
       "when": 1764157240971,
       "tag": "0030_naive_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1764575619282,
+      "tag": "0031_furry_jazinda",
+      "breakpoints": true
     }
   ]
 }

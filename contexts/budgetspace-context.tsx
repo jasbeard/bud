@@ -61,10 +61,15 @@ const budgetPlanAtom = atom((get) => {
 });
 
 // Derived atom for default budget space ID
-const defaultBudgetSpaceIdAtom = atom((get) => {
+const defaultBudgetspaceIdAtom = atom((get) => {
   const spaces = get(budgetSpacesAtom);
   const defaultSpace = spaces.find((space) => space.isDefault === true);
   return defaultSpace?.id ?? null;
+});
+
+// Current budget space ID (same as default since we don't allow updates)
+const currentBudgetspaceIdAtom = atom((get) => {
+  return get(defaultBudgetspaceIdAtom);
 });
 
 // Provider component - syncs SWR data to Jotai atoms
@@ -118,7 +123,8 @@ export function BudgetSpaceProvider({
 export function useBudgetspace() {
   const spaces = useAtomValue(budgetSpacesAtom);
   const plan = useAtomValue(budgetPlanAtom);
-  const defaultBudgetSpaceId = useAtomValue(defaultBudgetSpaceIdAtom);
+  const defaultBudgetspaceId = useAtomValue(defaultBudgetspaceIdAtom);
+  const currentBudgetspaceId = useAtomValue(currentBudgetspaceIdAtom);
   const isLoading = useAtomValue(budgetSpacesLoadingAtom);
   const error = useAtomValue(budgetSpacesErrorAtom);
   const mutateFn = useAtomValue(budgetSpacesMutateAtom);
@@ -131,7 +137,8 @@ export function useBudgetspace() {
   }, [mutateFn]);
 
   return {
-    defaultBudgetSpaceId,
+    defaultBudgetspaceId,
+    currentBudgetspaceId,
     spaces,
     plan,
     isLoading,
