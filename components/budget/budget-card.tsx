@@ -44,6 +44,7 @@ import {
   BudgetSpaceProvider,
   useBudgetspace,
 } from "@/contexts/budgetspace-context";
+import { Budget } from "@/contexts/budget-context";
 
 interface CategoryItem {
   name: string;
@@ -78,10 +79,18 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
-export function BudgetCard({ onClose }: { onClose?: () => void }) {
+export function BudgetList({
+  onClose,
+  budgets,
+}: {
+  onClose?: () => void;
+  budgets: Budget[];
+}) {
   return (
     <BudgetSpaceProvider>
-      <BaseBudgetCard name="Sample" onClose={onClose} />
+      {budgets.map((budget) => (
+        <BaseBudgetCard key={budget.id} name={budget.name} onClose={onClose} />
+      ))}
     </BudgetSpaceProvider>
   );
 }

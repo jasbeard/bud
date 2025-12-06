@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
-import { BudgetCard } from "./budget-card";
+import { BudgetList } from "./budget-card";
 import { BudgetCardSkeleton } from "./budget-card-skeleton";
 import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
@@ -25,10 +25,12 @@ function BudgetPageContent() {
   const hasBudgets = budgets.length > 0;
   const shouldShowEmpty = !hasBudgets && !showMainContent;
 
+  // TODO: reevaluate ui flow of empty budget
+  // issue is currently showing empty budget while useBudgets still fetching
   return (
     <>
       {showMainContent || hasBudgets ? (
-        <BudgetCard onClose={handleCloseExpense} />
+        <BudgetList onClose={handleCloseExpense} budgets={budgets} />
       ) : null}
       {shouldShowEmpty ? (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />

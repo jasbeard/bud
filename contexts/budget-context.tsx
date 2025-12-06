@@ -4,7 +4,7 @@ import * as React from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import useSWR from "swr";
 
-interface Budget {
+export interface Budget {
   id: string;
   name: string;
   totalAmount: string;
