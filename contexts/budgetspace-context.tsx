@@ -96,29 +96,54 @@ export function BudgetSpaceProvider({
     }
   );
 
+  // Store previous data JSON to prevent unnecessary updates
+  const prevDataJsonRef = React.useRef<string | undefined>(undefined);
+
   // Sync SWR state to Jotai atoms immediately to prevent layout shifts
   // Use useLayoutEffect for synchronous updates before paint
   React.useLayoutEffect(() => {
     if (data) {
-      try {
-        setBudgetSpacesData(data);
-      } catch (error) {
-        console.error("Error setting budget spaces data:", error);
+      const dataJson = JSON.stringify(data);
+      if (dataJson !== prevDataJsonRef.current) {
+        try {
+          setBudgetSpacesData(data);
+          prevDataJsonRef.current = dataJson;
+        } catch (error) {
+          console.error("Error setting budget spaces data:", error);
+        }
       }
     }
-  }, [data, setBudgetSpacesData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  const prevLoadingRef = React.useRef<boolean | undefined>(undefined);
+  React.useLayoutEffect(() => {
+    if (isLoading !== prevLoadingRef.current) {
+      setLoading(isLoading ?? false);
+      prevLoadingRef.current = isLoading ?? false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
+  const prevErrorRef = React.useRef<Error | undefined>(undefined);
+  React.useLayoutEffect(() => {
+    if (error !== prevErrorRef.current) {
+      setError(error as Error | undefined);
+      prevErrorRef.current = error as Error | undefined;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error]);
+
+  // Store mutate function using ref to prevent infinite loops
+  const mutateRef = React.useRef<typeof mutate>(mutate);
+  React.useLayoutEffect(() => {
+    mutateRef.current = mutate;
+  }, [mutate]);
 
   React.useLayoutEffect(() => {
-    setLoading(isLoading ?? false);
-  }, [isLoading, setLoading]);
-
-  React.useLayoutEffect(() => {
-    setError(error as Error | undefined);
-  }, [error, setError]);
-
-  React.useLayoutEffect(() => {
-    setMutate(() => mutate);
-  }, [mutate, setMutate]);
+    setMutate(() => mutateRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <>{children}</>;
 }

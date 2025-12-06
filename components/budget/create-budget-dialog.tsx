@@ -26,7 +26,10 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useBudgets } from "@/contexts/budget-context";
-import { useBudgetspace } from "@/contexts/budgetspace-context";
+import {
+  BudgetSpaceProvider,
+  useBudgetspace,
+} from "@/contexts/budgetspace-context";
 
 const createBudgetSchema = z.object({
   name: z.string().min(1, "Budget name is required").trim(),
@@ -38,13 +41,38 @@ interface CreateBudgetDialogProps {
   children: React.ReactNode;
 }
 
-function CreateBudgetDialogForm({
+function CreateBudgetDialogFormContent({
   onOpenChange,
 }: {
   onOpenChange: (open: boolean) => void;
 }) {
+  const { currentBudgetspaceId, isLoading } = useBudgetspace();
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-20 ml-auto" />
+      </div>
+    );
+  }
+
+  return (
+    <CreateBudgetDialogForm
+      currentBudgetspaceId={currentBudgetspaceId}
+      onOpenChange={onOpenChange}
+    />
+  );
+}
+
+function CreateBudgetDialogForm({
+  onOpenChange,
+  currentBudgetspaceId,
+}: {
+  onOpenChange: (open: boolean) => void;
+  currentBudgetspaceId: string | null;
+}) {
   const { mutate } = useBudgets();
-  const { currentBudgetspaceId } = useBudgetspace();
 
   const form = useForm<CreateBudgetFormValues>({
     resolver: zodResolver(createBudgetSchema),
@@ -102,73 +130,70 @@ function CreateBudgetDialogForm({
   };
 
   return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Create Budget</DialogTitle>
-        <DialogDescription>
-          Enter a name for your new budget to get started.{" "}
-          {currentBudgetspaceId}
-        </DialogDescription>
-      </DialogHeader>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-4"
-        >
-          {form.formState.errors.root && (
-            <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
-              {form.formState.errors.root.message}
-            </div>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="flex flex-col gap-4"
+      >
+        {form.formState.errors.root && (
+          <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+            {form.formState.errors.root.message}
+          </div>
+        )}
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input placeholder="My Budget" required {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="My Budget" required {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <DialogFooter className="sm:justify-end">
-            <Button
-              type="submit"
-              variant="default"
-              className="cursor-pointer"
-              disabled={form.formState.isSubmitting}
-            >
-              {form.formState.isSubmitting ? "Creating..." : "Create"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </Form>
-    </>
+        />
+        <DialogFooter className="sm:justify-end">
+          <Button
+            type="submit"
+            variant="default"
+            className="cursor-pointer"
+            disabled={form.formState.isSubmitting}
+          >
+            {form.formState.isSubmitting ? "Creating..." : "Create"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
 
 export function CreateBudgetDialog({ children }: CreateBudgetDialogProps) {
   const [open, setOpen] = useState(false);
-  // TODO: fix suspense boundary and decide where to wrap the suspense
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-md gap-8">
-        <Suspense
-          fallback={
-            <div className="flex flex-col gap-4">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-20 ml-auto" />
-            </div>
-          }
-        >
-          <CreateBudgetDialogForm onOpenChange={setOpen} />
-        </Suspense>
-      </DialogContent>
-    </Dialog>
+    <BudgetSpaceProvider>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{children}</DialogTrigger>
+        <DialogContent className="sm:max-w-md gap-8">
+          <DialogHeader>
+            <DialogTitle>Create Budget</DialogTitle>
+            <DialogDescription>
+              Enter a name for your new budget to get started.
+            </DialogDescription>
+          </DialogHeader>
+          <Suspense
+            fallback={
+              <div className="flex flex-col gap-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-20 ml-auto" />
+              </div>
+            }
+          >
+            <CreateBudgetDialogFormContent onOpenChange={setOpen} />
+          </Suspense>
+        </DialogContent>
+      </Dialog>
+    </BudgetSpaceProvider>
   );
 }
