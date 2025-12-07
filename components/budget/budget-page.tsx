@@ -3,16 +3,28 @@
 import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
 import { BudgetList } from "./budget-card";
-import { BudgetCardSkeleton } from "./budget-card-skeleton";
 import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
   BudgetSpaceProvider,
   useBudgetspace,
 } from "@/contexts/budgetspace-context";
+import { Spinner } from "../ui/spinner";
+import { Badge } from "../ui/badge";
+
+function UpdatingBadge() {
+  return (
+    <div className="w-full flex justify-center py-2">
+      <Badge>
+        <Spinner className="size-6" />
+        Updating
+      </Badge>
+    </div>
+  );
+}
 
 function BudgetPageContent() {
   const [showMainContent, setMainContent] = useState(false);
-  const { budgets } = useBudgets();
+  const { budgets, isLoading } = useBudgets();
 
   const handleOnCreateBudet = () => {
     setMainContent(true);
@@ -23,18 +35,16 @@ function BudgetPageContent() {
 
   // Show empty state if no budgets exist
   const hasBudgets = budgets.length > 0;
-  const shouldShowEmpty = !hasBudgets && !showMainContent;
 
-  // TODO: reevaluate ui flow of empty budget
-  // issue is currently showing empty budget while useBudgets still fetching
   return (
     <>
-      {showMainContent || hasBudgets ? (
+      {isLoading ? (
+        <UpdatingBadge />
+      ) : showMainContent || hasBudgets ? (
         <BudgetList onClose={handleCloseExpense} budgets={budgets} />
-      ) : null}
-      {shouldShowEmpty ? (
+      ) : (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />
-      ) : null}
+      )}
     </>
   );
 }
@@ -47,13 +57,13 @@ function BudgetPageInner() {
     setIsMounted(true);
   }, []);
 
-  // During SSR, show skeleton. Once mounted on client, use Suspense
+  // During SSR, show UpdatingBadge. Once mounted on client, use Suspense
   if (!isMounted) {
-    return <BudgetCardSkeleton />;
+    return <UpdatingBadge />;
   }
 
   return (
-    <Suspense fallback={<BudgetCardSkeleton />}>
+    <Suspense fallback={<UpdatingBadge />}>
       <BudgetProvider budgetspaceId={currentBudgetspaceId ?? undefined}>
         <BudgetPageContent />
       </BudgetProvider>
