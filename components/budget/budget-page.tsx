@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
-import { BudgetList } from "./budget-card";
+import { BudgetList } from "./budget-list";
 import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
   BudgetSpaceProvider,

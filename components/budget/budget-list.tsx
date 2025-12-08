@@ -71,6 +71,33 @@ interface CategoryWithAllocation {
   allocationType: CategoryType;
 }
 
+interface BudgetCategoryResponse {
+  id: string;
+  categoryId: string;
+  name: string;
+  allocationAmount: string;
+  allocationType: CategoryType;
+  createdAt: Date;
+  updatedAt: Date | null;
+  category: {
+    id: string;
+    name: string;
+    color: string | null;
+    icon: string | null;
+    budgetspaceId: string;
+  };
+}
+
+async function budgetCategoriesFetcher(
+  url: string
+): Promise<BudgetCategoryResponse[]> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch budget categories");
+  }
+  return response.json();
+}
+
 const categoryFormSchema = z.object({
   category: z.string().min(1, "Category is required"),
   allocationAmount: z.number().min(0, "Allocation must be 0 or greater"),
@@ -103,9 +130,6 @@ function BaseBudgetCard({
   onClose?: () => void;
 }) {
   const { currentBudgetspaceId } = useBudgetspace();
-  const [addedCategories, setAddedCategories] = useState<
-    CategoryWithAllocation[]
-  >([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [allocationDisplayValue, setAllocationDisplayValue] =
@@ -124,22 +148,50 @@ function BaseBudgetCard({
   const { data: categoriesData, isLoading: isLoadingCategories } =
     useSWR<CategoriesResponse>("/api/categories", fetcher);
 
-  // Combine default categories and user categories, then add locally added ones
+  // Fetch existing budget categories from the API
+  const budgetCategoriesUrl = currentBudgetspaceId
+    ? `/api/budget-categories?budgetspaceId=${currentBudgetspaceId}`
+    : "/api/budget-categories";
+  const {
+    data: budgetCategoriesData,
+    isLoading: isLoadingBudgetCategories,
+    mutate: mutateBudgetCategories,
+  } = useSWR<BudgetCategoryResponse[]>(
+    currentBudgetspaceId ? budgetCategoriesUrl : null,
+    budgetCategoriesFetcher
+  );
+
+  // Transform API response to CategoryWithAllocation format
+  const fetchedCategories: CategoryWithAllocation[] = useMemo(() => {
+    if (!budgetCategoriesData) return [];
+    return budgetCategoriesData.map((cat) => ({
+      name: cat.name,
+      allocationAmount: parseFloat(cat.allocationAmount) || 0,
+      allocationType: cat.allocationType,
+    }));
+  }, [budgetCategoriesData]);
+
+  // Combine fetched categories with any optimistically added ones
+  const allCategories = useMemo(() => {
+    return fetchedCategories;
+  }, [fetchedCategories]);
+
+  // Combine default categories and user categories for the dropdown
   const allCategoryOptions = useMemo(() => {
     const defaultNames =
       categoriesData?.defaultCategories.map((cat) => cat.name) ?? [];
     const userGenerated =
       categoriesData?.categories.map((cat) => cat.name) ?? [];
-    const addedNames = addedCategories.map((cat) => cat.name);
+    const fetchedNames = allCategories.map((cat) => cat.name);
     const combined = [
-      ...new Set([...defaultNames, ...userGenerated, ...addedNames]),
+      ...new Set([...defaultNames, ...userGenerated, ...fetchedNames]),
     ];
 
     return combined.map((cat) => ({
       label: cat,
       value: cat.toLowerCase().replace(/\s+/g, "-"),
     }));
-  }, [categoriesData, addedCategories]);
+  }, [categoriesData, allCategories]);
 
   const handleCreateNewCategory = (newCategoryName: string) => {
     const trimmedName = newCategoryName.trim();
@@ -175,8 +227,8 @@ function BaseBudgetCard({
         .join(" ");
     }
 
-    // Check if category already exists
-    const exists = addedCategories.some(
+    // Check if category already exists in fetched categories
+    const exists = allCategories.some(
       (cat) => cat.name.toLowerCase() === categoryName.toLowerCase()
     );
 
@@ -220,15 +272,8 @@ function BaseBudgetCard({
 
       await response.json();
 
-      // Update local state with the created category
-      setAddedCategories([
-        ...addedCategories,
-        {
-          name: categoryName,
-          allocationAmount: values.allocationAmount ?? 0,
-          allocationType: values.categoryType,
-        },
-      ]);
+      // Refetch budget categories to get the updated list from the server
+      await mutateBudgetCategories();
 
       form.reset();
       setIsDialogOpen(false);
@@ -259,7 +304,9 @@ function BaseBudgetCard({
                 toast.info("Edit functionality coming soon");
               }}
               className="h-6 w-6 cursor-pointer"
-              disabled={!addedCategories.length}
+              disabled={
+                !budgetCategoriesData || budgetCategoriesData.length === 0
+              }
             >
               <PencilIcon className="h-4 w-4 text-muted-foreground" />
               <span className="sr-only">Edit</span>
@@ -277,25 +324,33 @@ function BaseBudgetCard({
         )}
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        {addedCategories.length > 0 && (
-          <div className="flex flex-col gap-1">
-            {addedCategories.map((category, index) => (
-              <div
-                key={index}
-                className="text-sm px-2 py-2 bg-muted rounded-md flex justify-between items-center"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span>{category.name}</span>
-                </div>
-                {category.allocationAmount > 0 && (
-                  <span className="text-muted-foreground font-medium">
-                    ${category.allocationAmount.toFixed(2)}
-                  </span>
-                )}
-              </div>
-            ))}
+        {isLoadingBudgetCategories ? (
+          <div className="text-sm text-muted-foreground py-2">
+            Loading categories...
           </div>
-        )}
+        ) : budgetCategoriesData && budgetCategoriesData.length > 0 ? (
+          <div className="flex flex-col gap-1">
+            {budgetCategoriesData.map((category) => {
+              const allocationAmount =
+                parseFloat(category.allocationAmount) || 0;
+              return (
+                <div
+                  key={category.id}
+                  className="text-sm px-2 py-2 bg-muted rounded-md flex justify-between items-center"
+                >
+                  <div className="flex flex-col gap-0.5">
+                    <span>{category.name}</span>
+                  </div>
+                  {allocationAmount > 0 && (
+                    <span className="text-muted-foreground font-medium">
+                      ${allocationAmount.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
