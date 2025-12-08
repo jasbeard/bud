@@ -19,13 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { NewTransactionDialog } from "./new-transaction-dialog";
-import {
-  EyeIcon,
-  FolderIcon,
-  PlusCircleIcon,
-  PlusIcon,
-  ShareIcon,
-} from "lucide-react";
+import { EyeIcon, PlusIcon, ShareIcon } from "lucide-react";
 
 export function NavMain({
   items,
