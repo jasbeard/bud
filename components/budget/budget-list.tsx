@@ -1,8 +1,5 @@
 import useSWR from "swr";
 import { useState, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 
 import {
   Card,
@@ -14,35 +11,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreVertical, PencilIcon, XIcon } from "lucide-react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/diaglog";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
 import {
   BudgetSpaceProvider,
   useBudgetspace,
 } from "@/contexts/budgetspace-context";
 import { Budget } from "@/contexts/budget-context";
 import { AddCategoryDialog } from "./add-category-dialog";
+import { EditBudgetDialog } from "./edit-budget-dialog";
 
 interface CategoryItem {
   name: string;
@@ -96,15 +76,6 @@ async function budgetCategoriesFetcher(
   return response.json();
 }
 
-const budgetNameFormSchema = z.object({
-  name: z
-    .string()
-    .min(1, "Budget name is required")
-    .max(100, "Budget name must be 100 characters or less"),
-});
-
-type BudgetNameFormValues = z.infer<typeof budgetNameFormSchema>;
-
 export function BudgetList({
   onClose,
   budgets,
@@ -130,7 +101,7 @@ function BaseBudgetCard({
 }) {
   // TODO: abstract parts of this, to mitigate code growth
   // 1. AddCategoryDialog Component: Done
-  // 2. EditBudgetDialog Component
+  // 2. EditBudgetDialog Component: Done
   // 3. BudgetCardHeader Component
   // 4. BudgetCategoryList Component
   // 5. Custom Hook: useBudgetCategories
@@ -139,15 +110,7 @@ function BaseBudgetCard({
 
   const { currentBudgetspaceId } = useBudgetspace();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isUpdatingBudget, setIsUpdatingBudget] = useState(false);
   const [budgetName, setBudgetName] = useState(budget.name);
-
-  const editForm = useForm<BudgetNameFormValues>({
-    resolver: zodResolver(budgetNameFormSchema),
-    defaultValues: {
-      name: budget.name,
-    },
-  });
 
   // Fetch both default categories and user categories in one request
   const { data: categoriesData, isLoading: isLoadingCategories } =
@@ -198,40 +161,6 @@ function BaseBudgetCard({
     }));
   }, [categoriesData, allCategories]);
 
-  const handleUpdateBudget = async (values: BudgetNameFormValues) => {
-    setIsUpdatingBudget(true);
-
-    try {
-      const response = await fetch(`/api/budgets/${budget.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: values.name,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || "Failed to update budget");
-      }
-
-      await response.json();
-
-      setBudgetName(values.name);
-      setIsEditDialogOpen(false);
-      toast.success("Budget renamed successfully");
-    } catch (error) {
-      console.error("Error updating budget:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to update budget"
-      );
-    } finally {
-      setIsUpdatingBudget(false);
-    }
-  };
-
   return (
     <Card className="md:w-[320px] md:min-h-[120px] border rounded m-4 relative">
       <CardHeader>
@@ -253,7 +182,6 @@ function BaseBudgetCard({
                 <DropdownMenuItem
                   onClick={() => {
                     setIsEditDialogOpen(true);
-                    editForm.reset({ name: budgetName });
                   }}
                 >
                   <PencilIcon className="h-4 w-4 mr-2" />
@@ -303,68 +231,13 @@ function BaseBudgetCard({
           isLoadingCategories={isLoadingCategories}
           onSuccess={mutateBudgetCategories}
         />
-        <Dialog
+        <EditBudgetDialog
+          budgetId={budget.id}
+          currentName={budgetName}
           open={isEditDialogOpen}
-          onOpenChange={(open) => {
-            setIsEditDialogOpen(open);
-            if (!open) {
-              editForm.reset({ name: budgetName });
-            }
-          }}
-        >
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Rename Budget</DialogTitle>
-              <DialogDescription>
-                Update the name of your budget.
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...editForm}>
-              <form
-                onSubmit={editForm.handleSubmit(handleUpdateBudget)}
-                className="flex flex-col gap-4"
-              >
-                <FormField
-                  control={editForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          id="budget-name"
-                          placeholder="Enter budget name"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <DialogFooter className="sm:justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setIsEditDialogOpen(false);
-                      editForm.reset({ name: budgetName });
-                    }}
-                    className="cursor-pointer"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isUpdatingBudget}
-                    className="cursor-pointer"
-                  >
-                    {isUpdatingBudget ? "Saving..." : "Save"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+          onOpenChange={setIsEditDialogOpen}
+          onSuccess={setBudgetName}
+        />
       </CardContent>
     </Card>
   );
