@@ -10,6 +10,7 @@ import { Budget } from "@/contexts/budget-context";
 import { AddCategoryDialog } from "./add-category-dialog";
 import { EditBudgetDialog } from "./edit-budget-dialog";
 import { BudgetCardHeader } from "./budget-card-header";
+import { BudgetCategoryList } from "./budget-category-list";
 
 interface CategoryItem {
   name: string;
@@ -90,7 +91,7 @@ function BaseBudgetCard({
   // 1. AddCategoryDialog Component: Done
   // 2. EditBudgetDialog Component: Done
   // 3. BudgetCardHeader Component: Done
-  // 4. BudgetCategoryList Component
+  // 4. BudgetCategoryList Component: Done
   // 5. Custom Hook: useBudgetCategories
   // 6. Types File (optional)
   // 7. API Utils File (optional)
@@ -156,33 +157,10 @@ function BaseBudgetCard({
         onDelete={onClose}
       />
       <CardContent className="flex flex-col gap-2">
-        {isLoadingBudgetCategories ? (
-          <div className="text-sm text-muted-foreground py-2">
-            Loading categories...
-          </div>
-        ) : budgetCategoriesData && budgetCategoriesData.length > 0 ? (
-          <div className="flex flex-col gap-1">
-            {budgetCategoriesData.map((category) => {
-              const allocationAmount =
-                parseFloat(category.allocationAmount) || 0;
-              return (
-                <div
-                  key={category.id}
-                  className="text-sm px-2 py-2 bg-muted rounded-md flex justify-between items-center"
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <span>{category.name}</span>
-                  </div>
-                  {allocationAmount > 0 && (
-                    <span className="text-muted-foreground font-medium">
-                      ${allocationAmount.toFixed(2)}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : null}
+        <BudgetCategoryList
+          categories={budgetCategoriesData}
+          isLoading={isLoadingBudgetCategories}
+        />
         <AddCategoryDialog
           allCategoryOptions={allCategoryOptions}
           allCategories={allCategories}
