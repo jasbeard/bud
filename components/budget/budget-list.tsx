@@ -1,21 +1,7 @@
 import useSWR from "swr";
 import { useState, useMemo } from "react";
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardAction,
-  CardContent,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { MoreVertical, PencilIcon, XIcon } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   BudgetSpaceProvider,
   useBudgetspace,
@@ -23,6 +9,7 @@ import {
 import { Budget } from "@/contexts/budget-context";
 import { AddCategoryDialog } from "./add-category-dialog";
 import { EditBudgetDialog } from "./edit-budget-dialog";
+import { BudgetCardHeader } from "./budget-card-header";
 
 interface CategoryItem {
   name: string;
@@ -102,7 +89,7 @@ function BaseBudgetCard({
   // TODO: abstract parts of this, to mitigate code growth
   // 1. AddCategoryDialog Component: Done
   // 2. EditBudgetDialog Component: Done
-  // 3. BudgetCardHeader Component
+  // 3. BudgetCardHeader Component: Done
   // 4. BudgetCategoryList Component
   // 5. Custom Hook: useBudgetCategories
   // 6. Types File (optional)
@@ -163,39 +150,11 @@ function BaseBudgetCard({
 
   return (
     <Card className="md:w-[320px] md:min-h-[120px] border rounded m-4 relative">
-      <CardHeader>
-        <CardTitle className="mt-0.5">{budgetName}</CardTitle>
-        {onClose && (
-          <CardAction>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 cursor-pointer"
-                >
-                  <MoreVertical className="h-4 w-4" />
-                  <span className="sr-only">More options</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="right">
-                <DropdownMenuItem
-                  onClick={() => {
-                    setIsEditDialogOpen(true);
-                  }}
-                >
-                  <PencilIcon className="h-4 w-4 mr-2" />
-                  Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onClose}>
-                  <XIcon className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </CardAction>
-        )}
-      </CardHeader>
+      <BudgetCardHeader
+        budgetName={budgetName}
+        onEdit={() => setIsEditDialogOpen(true)}
+        onDelete={onClose}
+      />
       <CardContent className="flex flex-col gap-2">
         {isLoadingBudgetCategories ? (
           <div className="text-sm text-muted-foreground py-2">
