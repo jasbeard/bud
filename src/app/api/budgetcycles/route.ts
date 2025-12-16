@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/db/db";
 import { budgetCycles, budgetCycleTimelines, budgetspaces } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
 
@@ -55,7 +55,47 @@ export async function GET() {
       .where(eq(budgetCycles.userId, userId))
       .orderBy(budgetCycles.createdAt);
 
-    return NextResponse.json(userBudgetCycles);
+    // Get timeline data for all budget cycles
+    const cycleIds = userBudgetCycles.map((cycle) => cycle.id);
+    const timelines =
+      cycleIds.length > 0
+        ? await db
+            .select()
+            .from(budgetCycleTimelines)
+            .where(
+              and(
+                eq(budgetCycleTimelines.userId, userId),
+                inArray(budgetCycleTimelines.budgetCycleId, cycleIds)
+              )
+            )
+        : [];
+
+    // Group timelines by cycle ID and sort by order
+    const timelinesByCycle = new Map<string, typeof timelines>();
+    timelines.forEach((timeline) => {
+      if (!timelinesByCycle.has(timeline.budgetCycleId)) {
+        timelinesByCycle.set(timeline.budgetCycleId, []);
+      }
+      timelinesByCycle.get(timeline.budgetCycleId)!.push(timeline);
+    });
+
+    // Sort timelines by order field (nulls last)
+    timelinesByCycle.forEach((timelineList) => {
+      timelineList.sort((a, b) => {
+        if (a.order === null && b.order === null) return 0;
+        if (a.order === null) return 1;
+        if (b.order === null) return -1;
+        return a.order - b.order;
+      });
+    });
+
+    // Combine cycles with their timelines
+    const cyclesWithTimelines = userBudgetCycles.map((cycle) => ({
+      ...cycle,
+      timelines: timelinesByCycle.get(cycle.id) || [],
+    }));
+
+    return NextResponse.json(cyclesWithTimelines);
   } catch (error) {
     console.error("Error fetching budgetcycles:", error);
     return NextResponse.json(
