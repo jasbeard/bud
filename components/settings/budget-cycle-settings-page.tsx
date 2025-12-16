@@ -17,7 +17,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Calendar } from "lucide-react";
+import { Calendar, PencilIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 function BudgetCycleCard({
   cycle,
@@ -40,7 +41,21 @@ function BudgetCycleCard({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{formatType(cycle.type)}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg">{formatType(cycle.type)}</CardTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 cursor-pointer"
+              onClick={() => {
+                // TODO: Implement edit functionality
+                console.log("Edit cycle:", cycle.id);
+              }}
+            >
+              <PencilIcon className="h-4 w-4" />
+              <span className="sr-only">Edit budget cycle</span>
+            </Button>
+          </div>
           <Badge variant="outline">{cycle.budgetspace.name}</Badge>
         </div>
       </CardHeader>
