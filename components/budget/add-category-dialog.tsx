@@ -57,6 +57,7 @@ interface AddCategoryDialogProps {
   allCategoryOptions: CategoryOption[];
   allCategories: CategoryWithAllocation[];
   currentBudgetspaceId?: string | null;
+  budgetId: string;
   isLoadingCategories: boolean;
   onSuccess: () => void;
 }
@@ -65,6 +66,7 @@ export function AddCategoryDialog({
   allCategoryOptions,
   allCategories,
   currentBudgetspaceId,
+  budgetId,
   isLoadingCategories,
   onSuccess,
 }: AddCategoryDialogProps) {
@@ -135,11 +137,13 @@ export function AddCategoryDialog({
         name: string;
         allocationAmount: number;
         allocationType: CategoryType;
+        budgetId: string;
         budgetspaceId?: string;
       } = {
         name: categoryName,
         allocationAmount: values.allocationAmount,
         allocationType: values.categoryType,
+        budgetId: budgetId,
       };
 
       if (currentBudgetspaceId) {

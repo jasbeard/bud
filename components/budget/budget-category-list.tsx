@@ -1,6 +1,7 @@
 interface BudgetCategoryResponse {
   id: string;
   categoryId: string;
+  budgetId: string;
   name: string;
   allocationAmount: string;
   allocationType: "expense" | "income";

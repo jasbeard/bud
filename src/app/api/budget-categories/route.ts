@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/db/db";
-import { budgetCategories, categories, budgetspaces } from "@/db/schema";
+import {
+  budgetCategories,
+  categories,
+  budgetspaces,
+  budgets,
+} from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
@@ -10,6 +15,7 @@ const createBudgetCategorySchema = z.object({
   name: z.string().min(1).max(100),
   allocationAmount: z.number().min(0),
   allocationType: z.enum(["expense", "income"]),
+  budgetId: z.uuid(),
   budgetspaceId: z.uuid().nullish(),
 });
 
@@ -18,6 +24,7 @@ const createBudgetCategorySchema = z.object({
     - name: string (category name)
     - allocationAmount: number (allocation amount)
     - allocationType: "expense" | "income"
+    - budgetId: string (required, the budget this category belongs to)
     - budgetspaceId: string (optional, defaults to user's default budgetspace)
   
   Returns:
@@ -41,48 +48,37 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createBudgetCategorySchema.parse(body);
 
-    let targetBudgetspaceId: string;
+    // Verify the user owns the specified budget
+    const budget = await db
+      .select()
+      .from(budgets)
+      .where(eq(budgets.id, validatedData.budgetId))
+      .limit(1);
 
-    if (validatedData.budgetspaceId) {
-      // Verify the user owns the specified budgetspace
-      const budgetspace = await db
-        .select()
-        .from(budgetspaces)
-        .where(
-          and(
-            eq(budgetspaces.id, validatedData.budgetspaceId),
-            eq(budgetspaces.userId, userId)
-          )
-        )
-        .limit(1);
-
-      if (budgetspace.length === 0) {
-        return NextResponse.json(
-          { error: "Budgetspace not found or access denied" },
-          { status: 404 }
-        );
-      }
-
-      targetBudgetspaceId = validatedData.budgetspaceId;
-    } else {
-      // Get the user's default budgetspace
-      const defaultBudgetspace = await db
-        .select()
-        .from(budgetspaces)
-        .where(
-          and(eq(budgetspaces.userId, userId), eq(budgetspaces.isDefault, true))
-        )
-        .limit(1);
-
-      if (defaultBudgetspace.length === 0) {
-        return NextResponse.json(
-          { error: "No default budgetspace found" },
-          { status: 404 }
-        );
-      }
-
-      targetBudgetspaceId = defaultBudgetspace[0].id;
+    if (budget.length === 0) {
+      return NextResponse.json({ error: "Budget not found" }, { status: 404 });
     }
+
+    // Verify the user owns the budgetspace that owns this budget
+    const budgetspace = await db
+      .select()
+      .from(budgetspaces)
+      .where(
+        and(
+          eq(budgetspaces.id, budget[0].budgetspaceId),
+          eq(budgetspaces.userId, userId)
+        )
+      )
+      .limit(1);
+
+    if (budgetspace.length === 0) {
+      return NextResponse.json(
+        { error: "Budgetspace not found or access denied" },
+        { status: 404 }
+      );
+    }
+
+    const targetBudgetspaceId = budget[0].budgetspaceId;
 
     // Find or create the category
     // Check if category already exists for this budgetspace (case-insensitive)
@@ -122,6 +118,7 @@ export async function POST(request: NextRequest) {
       .insert(budgetCategories)
       .values({
         categoryId,
+        budgetId: validatedData.budgetId,
         name: categoryName,
         allocationAmount: validatedData.allocationAmount.toString(),
         allocationType: validatedData.allocationType,
@@ -133,6 +130,7 @@ export async function POST(request: NextRequest) {
       .select({
         id: budgetCategories.id,
         categoryId: budgetCategories.categoryId,
+        budgetId: budgetCategories.budgetId,
         name: budgetCategories.name,
         allocationAmount: budgetCategories.allocationAmount,
         allocationType: budgetCategories.allocationType,
@@ -167,10 +165,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/* GET /api/budget-categories - Get budget categories for a budgetspace
+/* GET /api/budget-categories - Get budget categories
   Query parameters:
+    - budgetId (optional): If provided, returns budget categories for that budget.
     - budgetspaceId (optional): If provided, returns budget categories for that budgetspace.
                                 If not provided, returns budget categories for the user's default budgetspace.
+                                Note: budgetId takes precedence over budgetspaceId if both are provided.
   
   Returns:
     Array of budget categories with category details
@@ -190,11 +190,49 @@ export async function GET(request: NextRequest) {
 
     const userId = session.user.id;
     const { searchParams } = new URL(request.url);
+    const budgetIdParam = searchParams.get("budgetId");
     const budgetspaceIdParam = searchParams.get("budgetspaceId");
 
-    let targetBudgetspaceId: string;
+    // Build query conditions
+    let whereCondition;
 
-    if (budgetspaceIdParam) {
+    if (budgetIdParam) {
+      // Verify the user owns the specified budget
+      const budget = await db
+        .select()
+        .from(budgets)
+        .where(eq(budgets.id, budgetIdParam))
+        .limit(1);
+
+      if (budget.length === 0) {
+        return NextResponse.json(
+          { error: "Budget not found" },
+          { status: 404 }
+        );
+      }
+
+      // Verify the user owns the budgetspace that owns this budget
+      const budgetspace = await db
+        .select()
+        .from(budgetspaces)
+        .where(
+          and(
+            eq(budgetspaces.id, budget[0].budgetspaceId),
+            eq(budgetspaces.userId, userId)
+          )
+        )
+        .limit(1);
+
+      if (budgetspace.length === 0) {
+        return NextResponse.json(
+          { error: "Budgetspace not found or access denied" },
+          { status: 404 }
+        );
+      }
+
+      // Filter by budgetId
+      whereCondition = eq(budgetCategories.budgetId, budgetIdParam);
+    } else if (budgetspaceIdParam) {
       // Verify the user owns the specified budgetspace
       const budgetspace = await db
         .select()
@@ -214,7 +252,8 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      targetBudgetspaceId = budgetspaceIdParam;
+      // Filter by budgetspaceId (via categories join)
+      whereCondition = eq(categories.budgetspaceId, budgetspaceIdParam);
     } else {
       // Get the user's default budgetspace
       const defaultBudgetspace = await db
@@ -232,14 +271,16 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      targetBudgetspaceId = defaultBudgetspace[0].id;
+      // Filter by default budgetspaceId (via categories join)
+      whereCondition = eq(categories.budgetspaceId, defaultBudgetspace[0].id);
     }
 
-    // Fetch budget categories for the budgetspace
+    // Fetch budget categories
     const budgetCategoriesList = await db
       .select({
         id: budgetCategories.id,
         categoryId: budgetCategories.categoryId,
+        budgetId: budgetCategories.budgetId,
         name: budgetCategories.name,
         allocationAmount: budgetCategories.allocationAmount,
         allocationType: budgetCategories.allocationType,
@@ -255,7 +296,7 @@ export async function GET(request: NextRequest) {
       })
       .from(budgetCategories)
       .innerJoin(categories, eq(budgetCategories.categoryId, categories.id))
-      .where(eq(categories.budgetspaceId, targetBudgetspaceId))
+      .where(whereCondition)
       .orderBy(categories.name);
 
     return NextResponse.json(budgetCategoriesList);

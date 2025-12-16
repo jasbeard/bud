@@ -149,31 +149,15 @@ export const budgetCycleTimelines = pgTable("budget_cycle_timelines", {
   updatedAt: timestamp("updated_at"),
 });
 
-// Budgets table
-export const budgets = pgTable("budgets", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
-  budgetCategoryId: uuid("budget_category_id").references(
-    () => budgetCategories.id,
-    { onDelete: "cascade" }
-  ),
-  budgetspaceId: uuid("budgetspace_id")
-    .notNull()
-    .references(() => budgetspaces.id, { onDelete: "cascade" }),
-  budgetCycleId: uuid("budget_cycle_id").references(() => budgetCycles.id, {
-    onDelete: "cascade",
-  }),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at"),
-});
-
-// Budget categories table
+// Budget categories table (defined before budgets to avoid circular reference)
 export const budgetCategories = pgTable("budget_categories", {
   id: uuid("id").primaryKey().defaultRandom(),
   categoryId: uuid("category_id")
     .notNull()
     .references(() => categories.id, { onDelete: "cascade" }),
+  budgetId: uuid("budget_id")
+    .notNull()
+    .references(() => budgets.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   allocationAmount: decimal("allocation_amount", {
     precision: 10,
@@ -186,14 +170,35 @@ export const budgetCategories = pgTable("budget_categories", {
   updatedAt: timestamp("updated_at"),
 });
 
+// Budgets table
+export const budgets = pgTable("budgets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(),
+  // Note: budgetCategoryId is kept as a simple uuid without FK constraint
+  // to avoid circular dependency. Validation is handled at the application level.
+  budgetCategoryId: uuid("budget_category_id"),
+  budgetspaceId: uuid("budgetspace_id")
+    .notNull()
+    .references(() => budgetspaces.id, { onDelete: "cascade" }),
+  budgetCycleId: uuid("budget_cycle_id").references(() => budgetCycles.id, {
+    onDelete: "cascade",
+  }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
 export const budgetCategoriesRelations = relations(
   budgetCategories,
-  ({ one, many }) => ({
+  ({ one }) => ({
     category: one(categories, {
       fields: [budgetCategories.categoryId],
       references: [categories.id],
     }),
-    budgets: many(budgets),
+    budget: one(budgets, {
+      fields: [budgetCategories.budgetId],
+      references: [budgets.id],
+    }),
   })
 );
 
@@ -284,11 +289,12 @@ export const budgetCycleTimelineRelations = relations(
   })
 );
 
-export const budgetsRelations = relations(budgets, ({ one }) => ({
+export const budgetsRelations = relations(budgets, ({ one, many }) => ({
   budgetCategory: one(budgetCategories, {
     fields: [budgets.budgetCategoryId],
     references: [budgetCategories.id],
   }),
+  budgetCategories: many(budgetCategories),
   budgetspace: one(budgetspaces, {
     fields: [budgets.budgetspaceId],
     references: [budgetspaces.id],

@@ -22,6 +22,7 @@ interface CategoryWithAllocation {
 interface BudgetCategoryResponse {
   id: string;
   categoryId: string;
+  budgetId: string;
   name: string;
   allocationAmount: string;
   allocationType: CategoryType;
@@ -61,9 +62,10 @@ async function budgetCategoriesFetcher(
 
 /**
  * Hook to fetch and manage budget categories data
+ * @param budgetId - Optional budget ID to filter categories by specific budget
  * @returns Object containing categories data, loading states, and computed options
  */
-export function useBudgetCategories() {
+export function useBudgetCategories(budgetId?: string) {
   const { currentBudgetspaceId } = useBudgetspace();
 
   // Fetch both default categories and user categories in one request
@@ -71,7 +73,10 @@ export function useBudgetCategories() {
     useSWR<CategoriesResponse>("/api/categories", categoriesFetcher);
 
   // Fetch existing budget categories from the API
-  const budgetCategoriesUrl = currentBudgetspaceId
+  // If budgetId is provided, filter by budgetId; otherwise filter by budgetspaceId
+  const budgetCategoriesUrl = budgetId
+    ? `/api/budget-categories?budgetId=${budgetId}`
+    : currentBudgetspaceId
     ? `/api/budget-categories?budgetspaceId=${currentBudgetspaceId}`
     : "/api/budget-categories";
   const {
@@ -79,7 +84,7 @@ export function useBudgetCategories() {
     isLoading: isLoadingBudgetCategories,
     mutate: mutateBudgetCategories,
   } = useSWR<BudgetCategoryResponse[]>(
-    currentBudgetspaceId ? budgetCategoriesUrl : null,
+    budgetId || currentBudgetspaceId ? budgetCategoriesUrl : null,
     budgetCategoriesFetcher
   );
 

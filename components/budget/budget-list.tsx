@@ -52,7 +52,7 @@ function BaseBudgetCard({
     currentBudgetspaceId,
     isLoadingCategories,
     mutateBudgetCategories,
-  } = useBudgetCategories();
+  } = useBudgetCategories(budget.id);
 
   return (
     <Card className="md:w-[320px] md:min-h-[120px] border rounded m-4 relative">
@@ -70,6 +70,7 @@ function BaseBudgetCard({
           allCategoryOptions={allCategoryOptions}
           allCategories={allCategories}
           currentBudgetspaceId={currentBudgetspaceId}
+          budgetId={budget.id}
           isLoadingCategories={isLoadingCategories}
           onSuccess={mutateBudgetCategories}
         />
