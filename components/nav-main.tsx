@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { NewTransactionDialog } from "./new-transaction-dialog";
+import { CreateBudgetDialog } from "./budget/create-budget-dialog";
 import { EyeIcon, PlusIcon, ShareIcon } from "lucide-react";
 
 export function NavMain({
@@ -75,10 +76,19 @@ export function NavMain({
                       <EyeIcon className="text-muted-foreground" />
                       <span>View Budget</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <PlusIcon className="text-muted-foreground" />
-                      <span>Create Budget</span>
-                    </DropdownMenuItem>
+                    {item.title === "Budget" ? (
+                      <CreateBudgetDialog>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <PlusIcon className="text-muted-foreground" />
+                          <span>Create Budget</span>
+                        </DropdownMenuItem>
+                      </CreateBudgetDialog>
+                    ) : (
+                      <DropdownMenuItem>
+                        <PlusIcon className="text-muted-foreground" />
+                        <span>Create Budget</span>
+                      </DropdownMenuItem>
+                    )}
 
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>
