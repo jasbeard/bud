@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/empty";
 import { Calendar, PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BudgetCycleCalendar } from "./budget-cycle-calendar";
 
 function BudgetCycleCard({
   cycle,
@@ -92,9 +93,20 @@ function BudgetCycleCard({
   );
 }
 
-function BudgetCyclesList() {
-  const { budgetCycles, isLoading, error } = useBudgetCycles();
-
+function BudgetCyclesList({
+  budgetCycles,
+  isLoading,
+  error,
+}: {
+  budgetCycles: Array<{
+    id: string;
+    type: string;
+    budgetspace: { name: string };
+    timelines: Array<{ startDate: number; endDate: number }>;
+  }>;
+  isLoading: boolean;
+  error: Error | undefined;
+}) {
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -156,6 +168,8 @@ function BudgetCyclesList() {
 }
 
 export function BudgetCycleSettingsPage() {
+  const { budgetCycles, isLoading, error } = useBudgetCycles();
+  console.log("BudgetCycleSettingsPage: ", budgetCycles);
   return (
     <div className="space-y-6 m-6">
       <div>
@@ -164,7 +178,14 @@ export function BudgetCycleSettingsPage() {
           Manage your budget cycles and their configurations.
         </p>
       </div>
-      <BudgetCyclesList />
+      <BudgetCyclesList
+        budgetCycles={budgetCycles}
+        isLoading={isLoading}
+        error={error}
+      />
+      {!isLoading && budgetCycles.length > 0 && (
+        <BudgetCycleCalendar budgetCycles={budgetCycles} />
+      )}
     </div>
   );
 }
