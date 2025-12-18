@@ -292,16 +292,15 @@ export function BudgetCycleCalendar({
                   key={`${cycle.id}-${timelineIndex}`}
                   className="flex items-center gap-2 text-sm"
                 >
-                  <div
-                    className={cn(
-                      "w-3 h-3 rounded-full",
-                      getCycleDotColor(uniqueIndex)
-                    )}
-                  />
-
                   <Badge variant="outline" className="text-xs">
                     Day {timeline.startDate} - Day {timeline.endDate}
                     {timeline.endDate < timeline.startDate && " (next month)"}
+                    <div
+                      className={cn(
+                        "w-3 h-3 rounded-full",
+                        getCycleDotColor(uniqueIndex)
+                      )}
+                    />
                   </Badge>
                 </div>
               );
