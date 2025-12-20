@@ -63,9 +63,10 @@ async function budgetCategoriesFetcher(
 /**
  * Hook to fetch and manage budget categories data
  * @param budgetId - Optional budget ID to filter categories by specific budget
+ * @param skipFetch - Optional flag to skip fetching budget categories (useful when categories are already included)
  * @returns Object containing categories data, loading states, and computed options
  */
-export function useBudgetCategories(budgetId?: string) {
+export function useBudgetCategories(budgetId?: string, skipFetch?: boolean) {
   const { currentBudgetspaceId } = useBudgetspace();
 
   // Fetch both default categories and user categories in one request
@@ -74,6 +75,7 @@ export function useBudgetCategories(budgetId?: string) {
 
   // Fetch existing budget categories from the API
   // If budgetId is provided, filter by budgetId; otherwise filter by budgetspaceId
+  // Skip fetching if skipFetch is true (categories already included)
   const budgetCategoriesUrl = budgetId
     ? `/api/budget-categories?budgetId=${budgetId}`
     : currentBudgetspaceId
@@ -84,7 +86,11 @@ export function useBudgetCategories(budgetId?: string) {
     isLoading: isLoadingBudgetCategories,
     mutate: mutateBudgetCategories,
   } = useSWR<BudgetCategoryResponse[]>(
-    budgetId || currentBudgetspaceId ? budgetCategoriesUrl : null,
+    skipFetch
+      ? null
+      : budgetId || currentBudgetspaceId
+      ? budgetCategoriesUrl
+      : null,
     budgetCategoriesFetcher
   );
 

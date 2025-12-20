@@ -3,16 +3,18 @@
 import * as React from "react";
 import { atom, useAtomValue, useSetAtom } from "jotai";
 import useSWR from "swr";
+import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
 
 export interface Budget {
   id: string;
   name: string;
   totalAmount: string;
-  budgetCategoryId: string;
+  budgetCategoryId: string | null;
   budgetspaceId: string;
   budgetCycleId: string | null;
   createdAt: Date;
   updatedAt: Date | null;
+  budgetCategories?: BudgetCategoryResponse[];
 }
 
 async function fetcher(url: string): Promise<Budget[]> {

@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { db } from "@/db/db";
-import { budgets, budgetspaces, budgetCategories } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import {
+  budgets,
+  budgetspaces,
+  budgetCategories,
+  categories,
+} from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
 
@@ -211,7 +216,68 @@ export async function GET(request: NextRequest) {
       .from(budgets)
       .where(eq(budgets.budgetspaceId, targetBudgetspaceId));
 
-    return NextResponse.json(userBudgets);
+    // Fetch budget categories for each budget
+    const budgetIds = userBudgets.map((budget) => budget.id);
+
+    type BudgetCategoryWithDetails = {
+      id: string;
+      categoryId: string;
+      budgetId: string;
+      name: string;
+      allocationAmount: string;
+      allocationType: string;
+      createdAt: Date | null;
+      updatedAt: Date | null;
+      category: {
+        id: string;
+        name: string;
+        color: string | null;
+        icon: string | null;
+        budgetspaceId: string;
+      };
+    };
+
+    const budgetCategoriesMap = new Map<string, BudgetCategoryWithDetails[]>();
+
+    if (budgetIds.length > 0) {
+      const allBudgetCategories = await db
+        .select({
+          id: budgetCategories.id,
+          categoryId: budgetCategories.categoryId,
+          budgetId: budgetCategories.budgetId,
+          name: budgetCategories.name,
+          allocationAmount: budgetCategories.allocationAmount,
+          allocationType: budgetCategories.allocationType,
+          createdAt: budgetCategories.createdAt,
+          updatedAt: budgetCategories.updatedAt,
+          category: {
+            id: categories.id,
+            name: categories.name,
+            color: categories.color,
+            icon: categories.icon,
+            budgetspaceId: categories.budgetspaceId,
+          },
+        })
+        .from(budgetCategories)
+        .innerJoin(categories, eq(budgetCategories.categoryId, categories.id))
+        .where(inArray(budgetCategories.budgetId, budgetIds));
+
+      // Group categories by budgetId
+      for (const bc of allBudgetCategories) {
+        if (!budgetCategoriesMap.has(bc.budgetId)) {
+          budgetCategoriesMap.set(bc.budgetId, []);
+        }
+        budgetCategoriesMap.get(bc.budgetId)!.push(bc);
+      }
+    }
+
+    // Attach budget categories to each budget
+    const budgetsWithCategories = userBudgets.map((budget) => ({
+      ...budget,
+      budgetCategories: budgetCategoriesMap.get(budget.id) || [],
+    }));
+
+    return NextResponse.json(budgetsWithCategories);
   } catch (error) {
     console.error("Error fetching budgets:", error);
     return NextResponse.json(
