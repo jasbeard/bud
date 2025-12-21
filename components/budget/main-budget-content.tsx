@@ -19,7 +19,7 @@ export function MainBudgetContent({
 }) {
   return (
     <BudgetSpaceProvider>
-      {/* Place here total planned expense, and how much budget left components */}
+      {/* Place here total planned expense, and how much budget left (components) */}
 
       {budgets.map((budget) => (
         <BaseBudgetCard key={budget.id} budget={budget} onClose={onClose} />
