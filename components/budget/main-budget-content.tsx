@@ -10,7 +10,7 @@ import { BudgetCategoryList } from "./budget-category-list";
 import { useBudgetCategories } from "@/hooks/use-budget-categories";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
 
-export function BudgetList({
+export function MainBudgetContent({
   onClose,
   budgets,
 }: {
@@ -19,6 +19,8 @@ export function BudgetList({
 }) {
   return (
     <BudgetSpaceProvider>
+      {/* Place here total planned expense, and how much budget left components */}
+
       {budgets.map((budget) => (
         <BaseBudgetCard key={budget.id} budget={budget} onClose={onClose} />
       ))}

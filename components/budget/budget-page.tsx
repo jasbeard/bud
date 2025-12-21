@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
-import { BudgetList } from "./budget-list";
+import { MainBudgetContent } from "./main-budget-content";
 import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
   BudgetSpaceProvider,
@@ -41,7 +41,7 @@ function BudgetPageContent() {
       {isLoading ? (
         <UpdatingBadge />
       ) : showMainContent || hasBudgets ? (
-        <BudgetList onClose={handleCloseExpense} budgets={budgets} />
+        <MainBudgetContent onClose={handleCloseExpense} budgets={budgets} />
       ) : (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />
       )}

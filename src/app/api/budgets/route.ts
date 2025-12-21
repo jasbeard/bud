@@ -271,11 +271,20 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Attach budget categories to each budget
-    const budgetsWithCategories = userBudgets.map((budget) => ({
-      ...budget,
-      budgetCategories: budgetCategoriesMap.get(budget.id) || [],
-    }));
+    // Attach budget categories to each budget and calculate totalAmount
+    const budgetsWithCategories = userBudgets.map((budget) => {
+      const categories = budgetCategoriesMap.get(budget.id) || [];
+      // Calculate totalAmount from sum of all category allocations
+      const calculatedTotal = categories.reduce((sum, cat) => {
+        return sum + parseFloat(cat.allocationAmount || "0");
+      }, 0);
+
+      return {
+        ...budget,
+        totalAmount: calculatedTotal.toString(),
+        budgetCategories: categories,
+      };
+    });
 
     return NextResponse.json(budgetsWithCategories);
   } catch (error) {
