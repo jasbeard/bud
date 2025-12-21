@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from "react";
 import { EmptyBudget } from "../empty-budget";
-import { MainBudgetContent } from "./main-budget-content";
+import { BudgetMainContent } from "./budget-main-content";
 import { BudgetProvider, useBudgets } from "@/contexts/budget-context";
 import {
   BudgetSpaceProvider,
@@ -24,7 +24,7 @@ function UpdatingBadge() {
 
 function BudgetPageContent() {
   const [showMainContent, setMainContent] = useState(false);
-  const { budgets, isLoading } = useBudgets();
+  const { budgets, isLoading, mutate: mutateBudgets } = useBudgets();
 
   const handleOnCreateBudet = () => {
     setMainContent(true);
@@ -37,15 +37,20 @@ function BudgetPageContent() {
   const hasBudgets = budgets.length > 0;
 
   return (
-    <>
+    <div className="p-4">
       {isLoading ? (
         <UpdatingBadge />
       ) : showMainContent || hasBudgets ? (
-        <MainBudgetContent onClose={handleCloseExpense} budgets={budgets} />
+        <BudgetMainContent
+          onClose={handleCloseExpense}
+          budgets={budgets}
+          mutateBudgets={mutateBudgets}
+        />
       ) : (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />
       )}
-    </>
+      {/* <EmptyBudget onCreateBudget={handleOnCreateBudet} /> */}
+    </div>
   );
 }
 

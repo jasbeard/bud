@@ -53,13 +53,15 @@ const categoryFormSchema = z.object({
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
+import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
+
 interface AddCategoryDialogProps {
   allCategoryOptions: CategoryOption[];
   allCategories: CategoryWithAllocation[];
   currentBudgetspaceId?: string | null;
   budgetId: string;
   isLoadingCategories: boolean;
-  onSuccess: () => void;
+  onSuccess: (newCategory?: BudgetCategoryResponse) => void | Promise<void>;
 }
 
 export function AddCategoryDialog({
@@ -163,10 +165,10 @@ export function AddCategoryDialog({
         throw new Error(errorData.error || "Failed to create budget category");
       }
 
-      await response.json();
+      const newCategory: BudgetCategoryResponse = await response.json();
 
-      // Call the success callback to refresh the list
-      onSuccess();
+      // Call the success callback to refresh the list, passing the new category for optimistic updates
+      await onSuccess(newCategory);
 
       form.reset();
       setIsDialogOpen(false);
