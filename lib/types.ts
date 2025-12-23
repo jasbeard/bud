@@ -7,6 +7,7 @@ export enum AppPages {
   LOGIN = "/login",
   SIGNUP = "/signup",
   ONBOARDING = "/onboarding",
+  PRICING = "/pricing",
 
   // settings
   GENERAL_SETTINGS = "/settings/general",

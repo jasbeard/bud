@@ -7,8 +7,14 @@ const protectedRoutes: string[] = [
   AppPages.DASHBOARD,
   AppPages.BUDGET,
   AppPages.ONBOARDING,
+  AppPages.BUDGETCYCLE_SETTINGS,
 ];
-const publicRoutes: string[] = [AppPages.LOGIN, AppPages.SIGNUP, AppPages.HOME];
+const publicRoutes: string[] = [
+  AppPages.LOGIN,
+  AppPages.SIGNUP,
+  AppPages.HOME,
+  AppPages.PRICING,
+];
 
 export default async function middleware(req: NextRequest) {
   // 2. Check if the current route is protected or public
