@@ -49,7 +49,6 @@ function BudgetPageContent() {
       ) : (
         <EmptyBudget onCreateBudget={handleOnCreateBudet} />
       )}
-      {/* <EmptyBudget onCreateBudget={handleOnCreateBudet} /> */}
     </div>
   );
 }
