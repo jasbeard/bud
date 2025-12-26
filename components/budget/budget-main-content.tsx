@@ -5,6 +5,7 @@ import { BudgetSpaceProvider } from "@/contexts/budgetspace-context";
 import { Budget } from "@/contexts/budget-context";
 import { AddCategoryDialog } from "./add-category-dialog";
 import { EditBudgetDialog } from "./edit-budget-dialog";
+import { EditBudgetCategoryDialog } from "./edit-budget-category-dialog";
 import { BudgetCardHeader } from "./budget-card-header";
 import { BudgetCategoryList } from "./budget-category-list";
 import { useBudgetCategories } from "@/hooks/use-budget-categories";
@@ -57,10 +58,18 @@ function BaseBudgetCard({
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [budgetName, setBudgetName] = useState(budget.name);
+  const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] =
+    useState(false);
+  const [selectedCategory, setSelectedCategory] =
+    useState<BudgetCategoryResponse | null>(null);
   // Optimistic updates for newly added categories
   const [optimisticCategories, setOptimisticCategories] = useState<
     BudgetCategoryResponse[]
   >([]);
+  // Optimistic updates for updated categories
+  const [updatedCategories, setUpdatedCategories] = useState<
+    Map<string, BudgetCategoryResponse>
+  >(new Map());
 
   // Use included budget categories if available, otherwise fetch them
   const hasIncludedCategories = budget.budgetCategories !== undefined;
@@ -78,7 +87,7 @@ function BaseBudgetCard({
   );
 
   // Use included categories if available, otherwise use fetched ones
-  // Merge with optimistic categories for immediate UI updates
+  // Merge with optimistic categories and updated categories for immediate UI updates
   const budgetCategoriesData: BudgetCategoryResponse[] | undefined =
     useMemo(() => {
       let baseCategories: BudgetCategoryResponse[] = [];
@@ -88,39 +97,79 @@ function BaseBudgetCard({
         baseCategories = fetchedBudgetCategoriesData;
       }
 
-      // Merge with optimistic categories, avoiding duplicates
-      const existingIds = new Set(baseCategories.map((cat) => cat.id));
-      const newOptimistic = optimisticCategories.filter(
-        (cat) => !existingIds.has(cat.id)
-      );
-      return [...baseCategories, ...newOptimistic];
+      // Apply optimistic updates (both new and updated)
+      const categoriesMap = new Map<string, BudgetCategoryResponse>();
+
+      // Add base categories
+      baseCategories.forEach((cat) => {
+        categoriesMap.set(cat.id, cat);
+      });
+
+      // Apply updated categories (overwrite base categories)
+      updatedCategories.forEach((cat, id) => {
+        categoriesMap.set(id, cat);
+      });
+
+      // Add new optimistic categories (avoid duplicates)
+      optimisticCategories.forEach((cat) => {
+        if (!categoriesMap.has(cat.id)) {
+          categoriesMap.set(cat.id, cat);
+        }
+      });
+
+      return Array.from(categoriesMap.values());
     }, [
       hasIncludedCategories,
       budget.budgetCategories,
       fetchedBudgetCategoriesData,
       optimisticCategories,
+      updatedCategories,
     ]);
 
-  // Clear optimistic categories when budget prop updates (after mutate completes)
+  // Clear optimistic and updated categories when budget prop updates (after mutate completes)
   useEffect(() => {
     if (
       hasIncludedCategories &&
       budget.budgetCategories &&
-      optimisticCategories.length > 0
+      (optimisticCategories.length > 0 || updatedCategories.size > 0)
     ) {
-      // Check if any optimistic category now exists in the budget prop
+      // Check if any optimistic/updated category now exists in the budget prop
       const budgetCategoryIds = new Set(
         budget.budgetCategories.map((cat) => cat.id)
       );
+
+      // Check if all optimistic categories exist
       const allOptimisticExist = optimisticCategories.every((cat) =>
         budgetCategoryIds.has(cat.id)
       );
-      if (allOptimisticExist) {
-        // All optimistic categories are now in the real data, clear them
+
+      // Check if all updated categories exist and match
+      const allUpdatedExist = Array.from(updatedCategories.keys()).every(
+        (id) => {
+          const budgetCat = budget.budgetCategories?.find(
+            (cat) => cat.id === id
+          );
+          const updatedCat = updatedCategories.get(id);
+          return (
+            budgetCat &&
+            updatedCat &&
+            budgetCat.updatedAt === updatedCat.updatedAt
+          );
+        }
+      );
+
+      if (allOptimisticExist && allUpdatedExist) {
+        // All optimistic/updated categories are now in the real data, clear them
         setOptimisticCategories([]);
+        setUpdatedCategories(new Map());
       }
     }
-  }, [budget.budgetCategories, hasIncludedCategories, optimisticCategories]);
+  }, [
+    budget.budgetCategories,
+    hasIncludedCategories,
+    optimisticCategories,
+    updatedCategories,
+  ]);
 
   // If categories are included, we don't need to show loading state
   const isLoadingCategoriesList = hasIncludedCategories
@@ -138,6 +187,10 @@ function BaseBudgetCard({
         <BudgetCategoryList
           categories={budgetCategoriesData}
           isLoading={isLoadingCategoriesList}
+          onCategoryClick={(category) => {
+            setSelectedCategory(category);
+            setIsEditCategoryDialogOpen(true);
+          }}
         />
         <AddCategoryDialog
           allCategoryOptions={allCategoryOptions}
@@ -169,6 +222,37 @@ function BaseBudgetCard({
           onOpenChange={setIsEditDialogOpen}
           onSuccess={setBudgetName}
         />
+        {selectedCategory && (
+          <EditBudgetCategoryDialog
+            budgetCategory={selectedCategory}
+            allCategoryOptions={allCategoryOptions}
+            open={isEditCategoryDialogOpen}
+            onOpenChange={(open) => {
+              setIsEditCategoryDialogOpen(open);
+              if (!open) {
+                setSelectedCategory(null);
+              }
+            }}
+            onSuccess={async (updatedCategory) => {
+              // Optimistically update the category immediately
+              setUpdatedCategories((prev) => {
+                const newMap = new Map(prev);
+                newMap.set(updatedCategory.id, updatedCategory);
+                return newMap;
+              });
+
+              // Mutate budget categories if fetching separately
+              if (!hasIncludedCategories) {
+                await mutateBudgetCategories();
+              }
+              // Always mutate budgets to refresh included categories
+              // Updated categories will be cleared by useEffect when new data arrives
+              if (mutateBudgets) {
+                await mutateBudgets();
+              }
+            }}
+          />
+        )}
       </CardContent>
     </Card>
   );

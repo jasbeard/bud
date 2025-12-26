@@ -16,14 +16,18 @@ interface BudgetCategoryResponse {
   };
 }
 
+import { PencilIcon } from "lucide-react";
+
 interface BudgetCategoryListProps {
   categories: BudgetCategoryResponse[] | undefined;
   isLoading: boolean;
+  onCategoryClick?: (category: BudgetCategoryResponse) => void;
 }
 
 export function BudgetCategoryList({
   categories,
   isLoading,
+  onCategoryClick,
 }: BudgetCategoryListProps) {
   if (isLoading) {
     return (
@@ -44,16 +48,20 @@ export function BudgetCategoryList({
         return (
           <div
             key={category.id}
-            className="text-sm px-2 py-2 bg-muted rounded-md flex justify-between items-center"
+            onClick={() => onCategoryClick?.(category)}
+            className="text-sm px-2 py-2 bg-muted rounded-md flex justify-between items-center group cursor-pointer hover:bg-muted/80 transition-colors"
           >
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-0.5 flex-1">
               <span>{category.name}</span>
             </div>
-            {allocationAmount > 0 && (
-              <span className="text-muted-foreground font-medium">
-                ${allocationAmount.toFixed(2)}
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {allocationAmount > 0 && (
+                <span className="text-muted-foreground font-medium">
+                  ${allocationAmount.toFixed(2)}
+                </span>
+              )}
+              <PencilIcon className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
           </div>
         );
       })}
