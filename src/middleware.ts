@@ -2,18 +2,12 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextRequest, NextResponse } from "next/server";
 import { AppPages } from "@/lib/types";
 
-// 1. Specify protected and public routes
+// 1. Specify protected routes
 const protectedRoutes: string[] = [
   AppPages.DASHBOARD,
   AppPages.BUDGET,
   AppPages.ONBOARDING,
   AppPages.BUDGETCYCLE_SETTINGS,
-];
-const publicRoutes: string[] = [
-  AppPages.LOGIN,
-  AppPages.SIGNUP,
-  AppPages.HOME,
-  AppPages.PRICING,
 ];
 
 export default async function middleware(req: NextRequest) {
@@ -26,7 +20,6 @@ export default async function middleware(req: NextRequest) {
   }
 
   const isProtectedRoute = protectedRoutes.includes(path);
-  const isPublicRoute = publicRoutes.includes(path);
 
   // 3. Get better-auth session
   const sessionCookie = getSessionCookie(req);
@@ -68,12 +61,9 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // 6. Redirect to /budget if the user is authenticated on public routes
-  if (
-    isPublicRoute &&
-    sessionCookie &&
-    !req.nextUrl.pathname.startsWith(AppPages.BUDGET)
-  ) {
+  // 6. Redirect authenticated users away from login/signup pages to /budget
+  // Allow authenticated users to access landing (/), pricing, and other public pages
+  if (sessionCookie && (path === AppPages.LOGIN || path === AppPages.SIGNUP)) {
     return NextResponse.redirect(new URL(AppPages.BUDGET, req.nextUrl));
   }
 
