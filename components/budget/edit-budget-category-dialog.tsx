@@ -55,6 +55,7 @@ interface EditBudgetCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: (updatedCategory: BudgetCategoryResponse) => void | Promise<void>;
+  onDelete?: (deletedCategoryId: string) => void | Promise<void>;
 }
 
 export function EditBudgetCategoryDialog({
@@ -63,8 +64,10 @@ export function EditBudgetCategoryDialog({
   open,
   onOpenChange,
   onSuccess,
+  onDelete,
 }: EditBudgetCategoryDialogProps) {
   const [isUpdatingCategory, setIsUpdatingCategory] = useState(false);
+  const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [allocationDisplayValue, setAllocationDisplayValue] =
     useState<string>("");
 
@@ -94,6 +97,41 @@ export function EditBudgetCategoryDialog({
     if (trimmedName) {
       // Set the form value to the new category name
       form.setValue("name", trimmedName);
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    setIsDeletingCategory(true);
+
+    try {
+      const response = await fetch(
+        `/api/budget-categories/${budgetCategory.id}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to delete budget category");
+      }
+
+      await response.json();
+
+      if (onDelete) {
+        await onDelete(budgetCategory.id);
+      }
+      onOpenChange(false);
+      toast.success("Budget category deleted successfully");
+    } catch (error) {
+      console.error("Error deleting budget category:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete budget category"
+      );
+    } finally {
+      setIsDeletingCategory(false);
     }
   };
 
@@ -312,15 +350,12 @@ export function EditBudgetCategoryDialog({
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => {
-                  // TODO: Implement delete functionality
-                  console.log("Delete budget category:", budgetCategory.id);
-                }}
+                onClick={handleDeleteCategory}
                 className="cursor-pointer"
-                disabled={isUpdatingCategory}
+                disabled={isUpdatingCategory || isDeletingCategory}
               >
                 <TrashIcon className="h-4 w-4 mr-2" />
-                Delete
+                {isDeletingCategory ? "Deleting..." : "Delete"}
               </Button>
               <div className="flex gap-2">
                 <Button
@@ -342,7 +377,7 @@ export function EditBudgetCategoryDialog({
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isUpdatingCategory}
+                  disabled={isUpdatingCategory || isDeletingCategory}
                   className="cursor-pointer"
                 >
                   {isUpdatingCategory ? "Saving..." : "Save"}

@@ -219,3 +219,69 @@ export async function PUT(
     );
   }
 }
+
+/* DELETE /api/budget-categories/[id] - Delete a budget category
+  
+  Returns:
+    Success message
+  
+  Requires authentication - only authenticated users can delete budget categories.
+*/
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    // Get authenticated user from session
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = session.user.id;
+
+    // Verify the budget category exists and belongs to the user
+    const existingBudgetCategory = await db
+      .select({
+        id: budgetCategories.id,
+        budgetspace: {
+          userId: budgetspaces.userId,
+        },
+      })
+      .from(budgetCategories)
+      .innerJoin(budgets, eq(budgetCategories.budgetId, budgets.id))
+      .innerJoin(budgetspaces, eq(budgets.budgetspaceId, budgetspaces.id))
+      .where(eq(budgetCategories.id, id))
+      .limit(1);
+
+    if (existingBudgetCategory.length === 0) {
+      return NextResponse.json(
+        { error: "Budget category not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify the user owns the budgetspace
+    if (existingBudgetCategory[0].budgetspace?.userId !== userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    // Delete the budget category
+    await db.delete(budgetCategories).where(eq(budgetCategories.id, id));
+
+    return NextResponse.json({
+      message: "Budget category deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting budget category:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

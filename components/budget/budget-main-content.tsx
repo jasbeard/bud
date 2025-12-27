@@ -251,6 +251,32 @@ function BaseBudgetCard({
                 await mutateBudgets();
               }
             }}
+            onDelete={async (deletedCategoryId) => {
+              // Clear selected category if it's the one being deleted
+              if (selectedCategory?.id === deletedCategoryId) {
+                setSelectedCategory(null);
+              }
+
+              // Optimistically remove the category immediately
+              setUpdatedCategories((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(deletedCategoryId);
+                return newMap;
+              });
+              // Also remove from optimistic categories if it exists there
+              setOptimisticCategories((prev) =>
+                prev.filter((cat) => cat.id !== deletedCategoryId)
+              );
+
+              // Mutate budget categories if fetching separately
+              if (!hasIncludedCategories) {
+                await mutateBudgetCategories();
+              }
+              // Always mutate budgets to refresh included categories
+              if (mutateBudgets) {
+                await mutateBudgets();
+              }
+            }}
           />
         )}
       </CardContent>
