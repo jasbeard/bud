@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "../combobox";
 import { toast } from "sonner";
+import { TrashIcon } from "lucide-react";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
 
 type CategoryType = "expense" | "income";
@@ -307,31 +308,46 @@ export function EditBudgetCategoryDialog({
                 </FormItem>
               )}
             />
-            <DialogFooter className="sm:justify-end">
+            <DialogFooter className="sm:justify-between">
               <Button
                 type="button"
-                variant="outline"
+                variant="destructive"
                 onClick={() => {
-                  onOpenChange(false);
-                  form.reset({
-                    name: budgetCategory.name,
-                    allocationAmount:
-                      parseFloat(budgetCategory.allocationAmount) || 0,
-                    allocationType: budgetCategory.allocationType,
-                  });
-                  setAllocationDisplayValue("");
+                  // TODO: Implement delete functionality
+                  console.log("Delete budget category:", budgetCategory.id);
                 }}
                 className="cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
                 disabled={isUpdatingCategory}
-                className="cursor-pointer"
               >
-                {isUpdatingCategory ? "Saving..." : "Save"}
+                <TrashIcon className="h-4 w-4 mr-2" />
+                Delete
               </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    onOpenChange(false);
+                    form.reset({
+                      name: budgetCategory.name,
+                      allocationAmount:
+                        parseFloat(budgetCategory.allocationAmount) || 0,
+                      allocationType: budgetCategory.allocationType,
+                    });
+                    setAllocationDisplayValue("");
+                  }}
+                  className="cursor-pointer"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isUpdatingCategory}
+                  className="cursor-pointer"
+                >
+                  {isUpdatingCategory ? "Saving..." : "Save"}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>
