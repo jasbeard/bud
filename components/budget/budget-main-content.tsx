@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { BudgetSpaceProvider } from "@/contexts/budgetspace-context";
 import { Budget } from "@/contexts/budget-context";
 import { AddCategoryDialog } from "./add-category-dialog";
@@ -23,17 +24,32 @@ export function BudgetMainContent({
 }) {
   return (
     <BudgetSpaceProvider>
-      <BudgetChart budgets={budgets} />
-      <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 mt-4">
-        {budgets.map((budget) => (
-          <BaseBudgetCard
-            key={budget.id}
-            budget={budget}
-            onClose={onClose}
-            mutateBudgets={mutateBudgets}
-          />
-        ))}
-      </div>
+      <Tabs defaultValue="plan" className="w-full">
+        <TabsList>
+          <TabsTrigger value="plan" className="cursor-pointer">
+            Plan
+          </TabsTrigger>
+          <TabsTrigger value="remaining" className="cursor-pointer">
+            Remaining
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="plan">
+          <BudgetChart budgets={budgets} />
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4 mt-4">
+            {budgets.map((budget) => (
+              <BaseBudgetCard
+                key={budget.id}
+                budget={budget}
+                onClose={onClose}
+                mutateBudgets={mutateBudgets}
+              />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="remaining">
+          {/* remaining components */}
+        </TabsContent>
+      </Tabs>
     </BudgetSpaceProvider>
   );
 }
