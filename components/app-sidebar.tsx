@@ -156,16 +156,25 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  activeContent,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  activeContent?: string;
+}) {
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <BudgetSpaceSwitcherWithSuspense />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSettings items={data.settings} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={data.navMain} activeContent={activeContent} />
+        <NavSettings items={data.settings} activeContent={activeContent} />
+        <NavSecondary
+          items={data.navSecondary}
+          className="mt-auto"
+          activeContent={activeContent}
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

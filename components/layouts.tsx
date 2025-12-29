@@ -11,6 +11,7 @@ export function BlankLayout({ children }: { children: React.ReactNode }) {
 }
 
 export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   return (
     <SidebarProvider
       style={
@@ -20,7 +21,7 @@ export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" />
+      <AppSidebar variant="inset" activeContent={pathname} />
       <SidebarInset>
         <PageHeader />
         {/* <div className="flex flex-1 flex-col">

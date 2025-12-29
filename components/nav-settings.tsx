@@ -13,12 +13,14 @@ import {
 
 export function NavSettings({
   items,
+  activeContent,
 }: {
   items: {
     name: string;
     url: string;
     icon: Icon;
   }[];
+  activeContent?: string;
 }) {
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -26,7 +28,7 @@ export function NavSettings({
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
+            <SidebarMenuButton asChild isActive={activeContent === item.url}>
               <Link href={item.url}>
                 <item.icon />
                 <span>{item.name}</span>

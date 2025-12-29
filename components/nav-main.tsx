@@ -24,6 +24,7 @@ import { EyeIcon, PlusIcon, ShareIcon } from "lucide-react";
 
 export function NavMain({
   items,
+  activeContent,
 }: {
   items: {
     title: string;
@@ -31,6 +32,7 @@ export function NavMain({
     mainIcon?: Icon;
     actionIcon?: Icon;
   }[];
+  activeContent?: string;
 }) {
   const { isMobile } = useSidebar();
   return (
@@ -52,7 +54,11 @@ export function NavMain({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title} asChild>
+              <SidebarMenuButton
+                tooltip={item.title}
+                asChild
+                isActive={activeContent === item.url}
+              >
                 <Link href={item.url}>
                   {item.mainIcon && <item.mainIcon />}
                   <span>{item.title}</span>
