@@ -12,6 +12,7 @@ import { BudgetCategoryList } from "./budget-category-list";
 import { useBudgetCategories } from "@/hooks/use-budget-categories";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
 import { BudgetChart } from "./budget-chart";
+import { RemainingBudgetsView } from "./remaining-budgets-view";
 
 export function BudgetMainContent({
   onClose,
@@ -47,7 +48,7 @@ export function BudgetMainContent({
           </div>
         </TabsContent>
         <TabsContent value="remaining">
-          {/* remaining components */}
+          <RemainingBudgetsView budgets={budgets} />
         </TabsContent>
       </Tabs>
     </BudgetSpaceProvider>
