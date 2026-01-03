@@ -119,7 +119,7 @@ export function BudgetChart({ budgets }: BudgetChartProps) {
       </div>
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Chart Stuff Section */}
-        <div className="w-full lg:flex-[0.5] flex-col md:flex gap-4">
+        <div className="w-full lg:flex-[0.5] sm:flex-col md:flex-row md:flex gap-4">
           <div className="flex-shrink-0 w-[200px] md:w-[250px] h-[200px] md:h-[250px]">
             <ChartContainer config={chartConfig} className="w-full h-full">
               <RadialBarChart
@@ -191,31 +191,43 @@ export function BudgetChart({ budgets }: BudgetChartProps) {
         {/* Budget Breakdown Section */}
         <div className="w-full lg:flex-[0.5] flex flex-col gap-4">
           <div className="w-full">
-            {/* Header */}
-            <div className="flex items-center justify-between pb-2 gap-4">
+            {/* Header - Hidden on mobile, shown on larger screens */}
+            <div className="hidden md:flex items-center justify-between pb-2 gap-4">
               <div className="flex-1"></div>
-              <div className="text-sm font-semibold text-muted-foreground min-w-[120px] text-right">
+              <div className="text-sm font-semibold text-muted-foreground min-w-[100px] lg:min-w-[120px] text-right">
                 Expense
               </div>
-              <div className="text-sm font-semibold text-muted-foreground min-w-[120px] text-right">
+              <div className="text-sm font-semibold text-muted-foreground min-w-[100px] lg:min-w-[120px] text-right">
                 Income
               </div>
             </div>
             {/* Rows */}
-            <div className="flex flex-col gap-3 mt-3">
+            <div className="flex flex-col gap-3 mt-0 md:mt-3">
               {budgetBreakdowns.map((breakdown) => (
                 <div
                   key={breakdown.budget.id}
-                  className="flex items-center justify-between gap-4"
+                  className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-4"
                 >
-                  <div className="font-semibold text-lg flex-1">
+                  <div className="font-semibold text-base md:text-lg flex-1">
                     {breakdown.budget.name}
                   </div>
-                  <div className="text-base font-medium min-w-[120px] text-right">
-                    {formatCurrency(breakdown.expenses)}
-                  </div>
-                  <div className="text-base font-medium min-w-[120px] text-right text-green-600 dark:text-green-400">
-                    {formatCurrency(breakdown.income)}
+                  <div className="flex items-center justify-between md:justify-end gap-4 md:gap-0">
+                    <div className="flex flex-col md:block">
+                      <span className="text-xs md:hidden text-muted-foreground mb-1">
+                        Expense
+                      </span>
+                      <div className="text-sm md:text-base font-medium md:min-w-[100px] lg:min-w-[120px] md:text-right">
+                        {formatCurrency(breakdown.expenses)}
+                      </div>
+                    </div>
+                    <div className="flex flex-col md:block">
+                      <span className="text-xs md:hidden text-muted-foreground mb-1">
+                        Income
+                      </span>
+                      <div className="text-sm md:text-base font-medium md:min-w-[100px] lg:min-w-[120px] md:text-right text-green-600 dark:text-green-400">
+                        {formatCurrency(breakdown.income)}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
