@@ -15,6 +15,7 @@ import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
 export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
   const [selectedCategory, setSelectedCategory] =
     useState<BudgetCategoryResponse | null>(null);
+  const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   // Format currency (assuming PHP based on image)
   const formatCurrency = (amount: number) => {
@@ -79,6 +80,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                         key={category.id}
                         onClick={() => {
                           setSelectedCategory(category);
+                          setSelectedBudget(budget);
                           setIsDialogOpen(true);
                         }}
                         className="relative text-sm px-3 py-2.5 bg-muted rounded-md flex justify-between items-center border border-transparent hover:border-border hover:shadow-sm cursor-pointer transition-all active:scale-[0.98] group"
@@ -123,6 +125,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
           setIsDialogOpen(open);
           if (!open) {
             setSelectedCategory(null);
+            setSelectedBudget(null);
           }
         }}
       >
@@ -130,8 +133,8 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
           <DialogHeader>
             <DialogTitle>New Transaction</DialogTitle>
             <DialogDescription>
-              {selectedCategory
-                ? `Add a transaction for ${selectedCategory.name}`
+              {selectedCategory && selectedBudget
+                ? `${selectedCategory.name} for ${selectedBudget.name} plan`
                 : "Create a new transaction by filling out the details below."}
             </DialogDescription>
           </DialogHeader>
