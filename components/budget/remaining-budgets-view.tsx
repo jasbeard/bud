@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -27,18 +27,40 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
     }).format(amount);
   };
 
+  // Memoize budgets with their categories to ensure reactivity
+  const budgetsWithCategories = useMemo(() => {
+    return budgets.map((budget) => {
+      const categories = budget.budgetCategories || [];
+      const expenseCategories = categories.filter(
+        (cat) => cat.allocationType === "expense"
+      );
+      const incomeCategories = categories.filter(
+        (cat) => cat.allocationType === "income"
+      );
+      return {
+        ...budget,
+        expenseCategories,
+        incomeCategories,
+        allCategories: categories,
+      };
+    });
+  }, [budgets]);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-4">
-      {budgets.map((budget) => {
-        const categories = budget.budgetCategories || [];
-        const expenseCategories = categories.filter(
-          (cat) => cat.allocationType === "expense"
-        );
+      {budgetsWithCategories.map((budget) => {
+        const expenseCategories = budget.expenseCategories;
+        const incomeCategories = budget.incomeCategories;
+        const allCategories = budget.allCategories;
 
         // Calculate totals for this budget
-        const totalAllocated = expenseCategories.reduce((sum, cat) => {
+        const totalExpenseAllocated = expenseCategories.reduce((sum, cat) => {
           return sum + (parseFloat(cat.allocationAmount) || 0);
         }, 0);
+        const totalIncomeAllocated = incomeCategories.reduce((sum, cat) => {
+          return sum + (parseFloat(cat.allocationAmount) || 0);
+        }, 0);
+        const totalAllocated = totalExpenseAllocated + totalIncomeAllocated;
 
         // For now, remaining = allocated (since no transactions exist yet)
         // Later, this will be: remaining = allocated - spent
@@ -61,15 +83,15 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-xs text-muted-foreground">
-                  <span>From {expenseCategories.length} categories</span>
+                  <span>From {allCategories.length} categories</span>
                   <span>{formatCurrency(totalAllocated)} allocated</span>
                 </div>
               </div>
 
               {/* Category List */}
-              {expenseCategories.length > 0 ? (
+              {allCategories.length > 0 ? (
                 <div className="flex flex-col gap-1">
-                  {expenseCategories.map((category) => {
+                  {allCategories.map((category) => {
                     const allocationAmount =
                       parseFloat(category.allocationAmount) || 0;
                     // For now, remaining = allocated (no transactions yet)
@@ -77,7 +99,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
 
                     return (
                       <button
-                        key={category.id}
+                        key={`${budget.id}-${category.id}`}
                         type="button"
                         onClick={() => {
                           setSelectedCategory(category);
@@ -87,13 +109,24 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                         className="relative w-full text-left text-sm px-3 py-2.5 bg-muted rounded-md flex justify-between items-center border border-transparent hover:border-border hover:shadow-sm cursor-pointer transition-all active:scale-[0.98] group"
                       >
                         <div className="flex flex-col gap-0.5 flex-1">
-                          <span className="font-normal">{category.name}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-normal">{category.name}</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-muted-foreground/10 text-muted-foreground uppercase">
+                              {category.allocationType}
+                            </span>
+                          </div>
                           <span className="text-xs text-muted-foreground">
                             {formatCurrency(allocationAmount)} allocated
                           </span>
                         </div>
                         <div className="flex flex-col items-end gap-0.5">
-                          <span className="font-semibold text-green-600 dark:text-green-400">
+                          <span
+                            className={`font-semibold ${
+                              category.allocationType === "income"
+                                ? "text-green-600 dark:text-green-400"
+                                : "text-green-600 dark:text-green-400"
+                            }`}
+                          >
                             {formatCurrency(remaining)}
                           </span>
                           <span className="text-xs text-muted-foreground">
@@ -112,7 +145,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                 </div>
               ) : (
                 <div className="text-sm text-muted-foreground py-2 text-center">
-                  No expense categories yet
+                  No categories yet
                 </div>
               )}
             </CardContent>
