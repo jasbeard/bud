@@ -76,14 +76,15 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                     const remaining = allocationAmount;
 
                     return (
-                      <div
+                      <button
                         key={category.id}
+                        type="button"
                         onClick={() => {
                           setSelectedCategory(category);
                           setSelectedBudget(budget);
                           setIsDialogOpen(true);
                         }}
-                        className="relative text-sm px-3 py-2.5 bg-muted rounded-md flex justify-between items-center border border-transparent hover:border-border hover:shadow-sm cursor-pointer transition-all active:scale-[0.98] group"
+                        className="relative w-full text-left text-sm px-3 py-2.5 bg-muted rounded-md flex justify-between items-center border border-transparent hover:border-border hover:shadow-sm cursor-pointer transition-all active:scale-[0.98] group"
                       >
                         <div className="flex flex-col gap-0.5 flex-1">
                           <span className="font-normal">{category.name}</span>
@@ -105,7 +106,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                             Add transaction
                           </span>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
