@@ -1,16 +1,8 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/diaglog";
-import { Button } from "@/components/ui/button";
 import { Budget } from "@/contexts/budget-context";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
+import { NewTransactionDialog } from "./new-transaction-dialog";
 
 export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
   const [selectedCategory, setSelectedCategory] =
@@ -153,7 +145,7 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
         );
       })}
       {/* Transaction Dialog */}
-      <Dialog
+      <NewTransactionDialog
         open={isDialogOpen}
         onOpenChange={(open) => {
           setIsDialogOpen(open);
@@ -162,49 +154,9 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
             setSelectedBudget(null);
           }
         }}
-      >
-        <DialogContent className="sm:max-w-md gap-8">
-          <DialogHeader>
-            <DialogTitle>New Transaction</DialogTitle>
-            <DialogDescription>
-              {selectedCategory && selectedBudget
-                ? `${selectedCategory.name} for ${selectedBudget.name} plan`
-                : "Create a new transaction by filling out the details below."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="p-3 bg-muted rounded-md">
-              <div className="text-sm text-muted-foreground mb-1">
-                Budget Category
-              </div>
-              <div className="font-medium">
-                {selectedCategory?.name || "Not selected"}
-              </div>
-            </div>
-            <div className="text-sm text-muted-foreground text-center py-4">
-              Transaction form will be implemented here
-            </div>
-          </div>
-          <DialogFooter className="sm:justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              className="cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              className="cursor-pointer"
-              disabled
-            >
-              Create Transaction
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        selectedCategory={selectedCategory}
+        selectedBudget={selectedBudget}
+      />
     </div>
   );
 }
