@@ -12,7 +12,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-function formatDate(date: Date | undefined) {
+export function formatDate(date: Date | undefined) {
   if (!date) {
     return "";
   }
@@ -24,13 +24,73 @@ function formatDate(date: Date | undefined) {
   });
 }
 
-export function DatePickerTransaction() {
+export interface DatePickerTransactionProps {
+  /**
+   * The current value (formatted date string or relative date like "Today", "Yesterday", "Tomorrow")
+   */
+  value?: string;
+  /**
+   * Callback fired when the value changes. Receives the formatted date string.
+   */
+  onChange?: (value: string) => void;
+  /**
+   * Optional callback fired when the date changes. Receives the Date object.
+   * Useful when you need both the formatted string and the Date object.
+   */
+  onDateChange?: (date: Date | undefined) => void;
+  /**
+   * Default value for uncontrolled usage
+   */
+  defaultValue?: string;
+}
+
+export function DatePickerTransaction({
+  value: controlledValue,
+  onChange,
+  onDateChange,
+  defaultValue = "Today",
+}: DatePickerTransactionProps) {
   const [open, setOpen] = React.useState(false);
-  const [value, setValue] = React.useState("Today");
-  const [date, setDate] = React.useState<Date | undefined>(
-    parseDate(value) || undefined
+
+  // Determine if component is controlled
+  const isControlled = controlledValue !== undefined;
+
+  // Internal state for uncontrolled mode
+  const [internalValue, setInternalValue] = React.useState(defaultValue);
+
+  // Use controlled value if provided, otherwise use internal state
+  const value = isControlled ? controlledValue : internalValue;
+
+  // Parse the current value to get the Date object
+  const getDateFromValue = React.useCallback((val: string) => {
+    return parseDate(val) || undefined;
+  }, []);
+
+  const [date, setDate] = React.useState<Date | undefined>(() =>
+    getDateFromValue(value)
   );
   const [month, setMonth] = React.useState<Date | undefined>(date);
+
+  // Sync date when value prop changes (controlled mode)
+  React.useEffect(() => {
+    if (isControlled) {
+      const newDate = getDateFromValue(controlledValue);
+      setDate(newDate);
+      setMonth(newDate);
+    }
+  }, [controlledValue, isControlled, getDateFromValue]);
+
+  // Handle value change
+  const handleValueChange = React.useCallback(
+    (newValue: string, newDate: Date | undefined) => {
+      if (!isControlled) {
+        setInternalValue(newValue);
+      }
+      onChange?.(newValue);
+      onDateChange?.(newDate);
+    },
+    [isControlled, onChange, onDateChange]
+  );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -58,9 +118,10 @@ export function DatePickerTransaction() {
               onMonthChange={setMonth}
               onSelect={(selectedDate) => {
                 if (selectedDate) {
+                  const formattedDate = formatDate(selectedDate);
                   setDate(selectedDate);
-                  setValue(formatDate(selectedDate));
                   setMonth(selectedDate);
+                  handleValueChange(formattedDate, selectedDate);
                 }
                 setOpen(false);
               }}
@@ -71,14 +132,14 @@ export function DatePickerTransaction() {
           <Button
             size="sm"
             variant="outline"
-            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-background hover:border-muted-foreground"
             onClick={(e) => {
               e.preventDefault();
-              setValue("Yesterday");
               const parsedDate = parseDate("Yesterday");
               if (parsedDate) {
                 setDate(parsedDate);
                 setMonth(parsedDate);
+                handleValueChange("Yesterday", parsedDate);
               }
             }}
           >
@@ -87,14 +148,14 @@ export function DatePickerTransaction() {
           <Button
             size="sm"
             variant="outline"
-            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-background hover:border-muted-foreground"
             onClick={(e) => {
               e.preventDefault();
-              setValue("Today");
               const parsedDate = parseDate("Today");
               if (parsedDate) {
                 setDate(parsedDate);
                 setMonth(parsedDate);
+                handleValueChange("Today", parsedDate);
               }
             }}
           >
@@ -103,14 +164,14 @@ export function DatePickerTransaction() {
           <Button
             size="sm"
             variant="outline"
-            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5 hover:bg-background hover:border-muted-foreground"
             onClick={(e) => {
               e.preventDefault();
-              setValue("Tomorrow");
               const parsedDate = parseDate("Tomorrow");
               if (parsedDate) {
                 setDate(parsedDate);
                 setMonth(parsedDate);
+                handleValueChange("Tomorrow", parsedDate);
               }
             }}
           >

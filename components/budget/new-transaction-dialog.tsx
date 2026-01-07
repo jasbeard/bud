@@ -23,7 +23,11 @@ import {
 } from "@/components/ui/form";
 import { Budget } from "@/contexts/budget-context";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
-import { DatePickerTransaction } from "@/components/date-picker-transaction";
+import {
+  DatePickerTransaction,
+  formatDate,
+} from "@/components/date-picker-transaction";
+import { parseDate } from "chrono-node";
 
 const transactionSchema = z.object({
   spentAmount: z
@@ -94,12 +98,16 @@ export function NewTransactionDialog({
   };
 
   const onSubmit = async (values: TransactionFormValues) => {
+    const relativeDates = ["Yesterday", "Today", "Tomorrow"];
     try {
       // TODO: Implement transaction creation API call
       console.log("Transaction data:", {
         spentAmount: parseFloat(values.spentAmount),
         notes: values.notes,
-        date: values.date,
+        date:
+          values.date && relativeDates.includes(values.date)
+            ? formatDate(parseDate(values.date) as Date)
+            : values.date,
         categoryId: selectedCategory?.id,
         budgetId: selectedBudget?.id,
         type: selectedCategory?.allocationType,
@@ -247,9 +255,16 @@ export function NewTransactionDialog({
             </div>
 
             {/* Date Component */}
-            <div>
-              <DatePickerTransaction />
-            </div>
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <DatePickerTransaction
+                  value={field.value}
+                  onChange={field.onChange}
+                />
+              )}
+            />
 
             {/* Notes Field */}
             <FormField
