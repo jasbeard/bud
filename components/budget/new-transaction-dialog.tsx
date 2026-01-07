@@ -120,14 +120,16 @@ export function NewTransactionDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md gap-6">
+      <DialogContent className="sm:max-w-md gap-4 sm:gap-6 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>New Transaction</DialogTitle>
-          <DialogDescription className="flex items-center gap-2">
+          <DialogTitle className="text-lg text-left md:text-xl">
+            New Transaction
+          </DialogTitle>
+          <DialogDescription className="flex items-center gap-2 text-xs sm:text-sm flex-wrap">
             {selectedCategory && selectedBudget ? (
               <>
                 <span>{selectedBudget.name}</span>
-                <Badge variant="outline" className="uppercase">
+                <Badge variant="outline" className="uppercase text-xs">
                   {selectedCategory.allocationType}
                 </Badge>
               </>
@@ -156,7 +158,7 @@ export function NewTransactionDialog({
                   <FormControl>
                     <div className="flex flex-col gap-2">
                       <div className="relative">
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 text-4xl font-bold text-muted-foreground/50">
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 text-2xl sm:text-4xl font-bold">
                           ₱
                         </span>
                         <Input
@@ -164,7 +166,7 @@ export function NewTransactionDialog({
                           placeholder="0.00"
                           min="0"
                           step="0.01"
-                          className="shadow-none !text-4xl font-bold text-left border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-8 pr-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="shadow-none !text-4xl font-bold text-left border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 pl-6 sm:pl-8 pr-2 sm:pr-4 h-12 sm:h-auto [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           onKeyDown={(e) => {
                             // Allow: backspace, delete, tab, escape, enter
                             if (
@@ -235,11 +237,11 @@ export function NewTransactionDialog({
             />
 
             {/* Budget Category Display */}
-            <div className="p-3 bg-muted rounded-md">
-              <div className="text-sm text-muted-foreground mb-1">
+            <div className="p-2.5 sm:p-3 bg-muted rounded-md">
+              <div className="text-xs sm:text-sm text-muted-foreground mb-0.5 sm:mb-1">
                 Budget Category
               </div>
-              <div className="font-medium text-base">
+              <div className="font-medium text-sm sm:text-base">
                 {selectedCategory?.name || "Not selected"}
               </div>
             </div>
@@ -256,12 +258,14 @@ export function NewTransactionDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <div className="p-3 bg-muted rounded-md flex flex-col gap-2">
-                      <div className="text-sm text-muted-foreground">Notes</div>
+                    <div className="p-2.5 sm:p-3 bg-muted rounded-md flex flex-col gap-1.5 sm:gap-2">
+                      <div className="text-xs sm:text-sm text-muted-foreground">
+                        Notes
+                      </div>
                       <Textarea
                         placeholder="Add any additional notes about this transaction..."
                         rows={1}
-                        className="bg-transparent font-bold shadow-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none min-h-[1.5rem] field-sizing-content"
+                        className="bg-transparent font-bold shadow-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none min-h-[1.25rem] sm:min-h-[1.5rem] text-sm sm:text-base field-sizing-content"
                         {...field}
                       />
                     </div>
@@ -273,21 +277,21 @@ export function NewTransactionDialog({
 
             {/* Remaining Balance Display */}
             {selectedCategory && (
-              <div className="p-3 bg-muted rounded-md">
-                <div className="text-sm text-muted-foreground mb-1">
+              <div className="p-2.5 sm:p-3 bg-muted rounded-md">
+                <div className="text-xs sm:text-sm text-muted-foreground mb-0.5 sm:mb-1">
                   Remaining allocation
                 </div>
-                <div className={`font-semibold text-lg`}>
+                <div className={`font-semibold text-base sm:text-lg`}>
                   {formatCurrency(remainingBalance)}
                 </div>
               </div>
             )}
 
-            <DialogFooter className="sm:justify-end mt-6">
+            <DialogFooter className="sm:justify-end mt-4 sm:mt-6">
               <Button
                 type="submit"
                 variant="default"
-                className="cursor-pointer w-full"
+                className="cursor-pointer w-full text-sm sm:text-base"
                 disabled={form.formState.isSubmitting}
               >
                 {form.formState.isSubmitting

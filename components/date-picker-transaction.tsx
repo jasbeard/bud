@@ -34,14 +34,16 @@ export function DatePickerTransaction() {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="p-3 bg-muted rounded-md flex flex-col gap-2">
+      <div className="p-2.5 sm:p-3 bg-muted rounded-md flex flex-col gap-1.5 sm:gap-2">
         <PopoverTrigger asChild>
           <button
             type="button"
             className="text-left w-full hover:opacity-80 transition-opacity"
           >
-            <div className="text-sm text-muted-foreground mb-1">Date</div>
-            <div className="font-medium text-base">
+            <div className="text-xs sm:text-sm text-muted-foreground mb-0.5 sm:mb-1">
+              Date
+            </div>
+            <div className="font-medium text-sm sm:text-base">
               <span>{value}</span>
             </div>
           </button>
@@ -65,11 +67,11 @@ export function DatePickerTransaction() {
             />
           </div>
         </PopoverContent>
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-1.5 sm:gap-2 items-center flex-wrap">
           <Button
             size="sm"
             variant="outline"
-            className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
             onClick={(e) => {
               e.preventDefault();
               setValue("Yesterday");
@@ -85,7 +87,7 @@ export function DatePickerTransaction() {
           <Button
             size="sm"
             variant="outline"
-            className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
             onClick={(e) => {
               e.preventDefault();
               setValue("Today");
@@ -101,7 +103,7 @@ export function DatePickerTransaction() {
           <Button
             size="sm"
             variant="outline"
-            className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
+            className="text-[10px] sm:text-xs text-muted-foreground border-dashed rounded-full cursor-pointer px-2 sm:px-3 py-1 sm:py-1.5"
             onClick={(e) => {
               e.preventDefault();
               setValue("Tomorrow");
@@ -121,7 +123,7 @@ export function DatePickerTransaction() {
             onClick={() => setOpen(true)}
             className="cursor-pointer text-muted-foreground hover:text-foreground p-1 h-auto"
           >
-            <CalendarIcon className="size-4" />
+            <CalendarIcon className="size-3.5 sm:size-4" />
           </Button>
         </div>
       </div>
