@@ -99,7 +99,8 @@ export function DatePickerTransaction() {
           size="sm"
           variant="outline"
           className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             setValue("Yesterday");
             const date = parseDate("Yesterday");
             if (date) {
@@ -114,7 +115,8 @@ export function DatePickerTransaction() {
           size="sm"
           variant="outline"
           className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             setValue("Today");
             const date = parseDate("Today");
             if (date) {
@@ -129,7 +131,8 @@ export function DatePickerTransaction() {
           size="sm"
           variant="outline"
           className="text-xs text-muted-foreground border-dashed rounded-full cursor-pointer"
-          onClick={() => {
+          onClick={(e) => {
+            e.preventDefault();
             setValue("Tomorrow");
             const date = parseDate("Tomorrow");
             if (date) {
