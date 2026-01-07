@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Form,
   FormControl,
@@ -122,16 +123,23 @@ export function NewTransactionDialog({
       <DialogContent className="sm:max-w-md gap-6">
         <DialogHeader>
           <DialogTitle>New Transaction</DialogTitle>
-          <DialogDescription>
-            {selectedCategory && selectedBudget
-              ? `${selectedCategory.name} for ${selectedBudget.name} plan`
-              : "Create a new transaction by filling out the details below."}
+          <DialogDescription className="flex items-center gap-2">
+            {selectedCategory && selectedBudget ? (
+              <>
+                <span>{selectedBudget.name}</span>
+                <Badge variant="outline" className="uppercase">
+                  {selectedCategory.allocationType}
+                </Badge>
+              </>
+            ) : (
+              "Create a new transaction by filling out the details below."
+            )}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-2"
           >
             {form.formState.errors.root && (
               <div className="text-destructive text-sm bg-destructive/10 p-3 rounded-md">
@@ -247,13 +255,16 @@ export function NewTransactionDialog({
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  {/* <FormLabel>Notes</FormLabel> */}
                   <FormControl>
-                    <Textarea
-                      placeholder="Add any additional notes about this transaction..."
-                      rows={3}
-                      {...field}
-                    />
+                    <div className="p-3 bg-muted rounded-md flex flex-col gap-2">
+                      <div className="text-sm text-muted-foreground">Notes</div>
+                      <Textarea
+                        placeholder="Add any additional notes about this transaction..."
+                        rows={1}
+                        className="bg-transparent font-bold shadow-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 resize-none min-h-[1.5rem] field-sizing-content"
+                        {...field}
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -272,7 +283,7 @@ export function NewTransactionDialog({
               </div>
             )}
 
-            <DialogFooter className="sm:justify-end pt-2">
+            <DialogFooter className="sm:justify-end mt-6">
               <Button
                 type="submit"
                 variant="default"
