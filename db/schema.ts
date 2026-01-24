@@ -109,6 +109,9 @@ export const transactions = pgTable("transactions", {
   categoryId: uuid("category_id").references(() => categories.id, {
     onDelete: "set null",
   }),
+  budgetId: uuid("budget_id").references(() => budgets.id, {
+    onDelete: "set null",
+  }),
   budgetspaceId: uuid("budgetspace_id")
     .notNull()
     .references(() => budgetspaces.id, { onDelete: "cascade" }),
@@ -252,6 +255,10 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   category: one(categories, {
     fields: [transactions.categoryId],
     references: [categories.id],
+  }),
+  budget: one(budgets, {
+    fields: [transactions.budgetId],
+    references: [budgets.id],
   }),
   budgetspace: one(budgetspaces, {
     fields: [transactions.budgetspaceId],
