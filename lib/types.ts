@@ -4,6 +4,7 @@ export enum AppPages {
   HOME = "/",
   DASHBOARD = "/dashboard",
   BUDGET = "/budget",
+  TRANSACTIONS = "/transactions",
   LOGIN = "/login",
   SIGNUP = "/signup",
   ONBOARDING = "/onboarding",

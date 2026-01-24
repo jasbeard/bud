@@ -6,6 +6,7 @@ import { AppPages } from "@/lib/types";
 const protectedRoutes: string[] = [
   AppPages.DASHBOARD,
   AppPages.BUDGET,
+  AppPages.TRANSACTIONS,
   AppPages.ONBOARDING,
   AppPages.BUDGETCYCLE_SETTINGS,
 ];

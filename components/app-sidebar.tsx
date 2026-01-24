@@ -58,7 +58,7 @@ const data = {
     },
     {
       title: "Transactions",
-      url: "#",
+      url: AppPages.TRANSACTIONS,
       mainIcon: IconInvoice,
     },
     {
