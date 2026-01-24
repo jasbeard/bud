@@ -5,6 +5,7 @@ interface BudgetCategoryResponse {
   name: string;
   allocationAmount: string;
   allocationType: "expense" | "income";
+  spentAmount?: string; // Total spent amount from transactions (calculated at runtime)
   createdAt: Date;
   updatedAt: Date | null;
   category: {

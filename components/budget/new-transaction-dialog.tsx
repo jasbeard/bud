@@ -23,11 +23,9 @@ import {
 } from "@/components/ui/form";
 import { Budget } from "@/contexts/budget-context";
 import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
-import {
-  DatePickerTransaction,
-  formatDate,
-} from "@/components/date-picker-transaction";
+import { DatePickerTransaction } from "@/components/date-picker-transaction";
 import { parseDate } from "chrono-node";
+import { toast } from "sonner";
 
 const transactionSchema = z.object({
   spentAmount: z
@@ -48,6 +46,7 @@ interface NewTransactionDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedCategory: BudgetCategoryResponse | null;
   selectedBudget: Budget | null;
+  onSuccess?: () => void | Promise<void>; // Callback to refresh data after successful transaction
 }
 
 export function NewTransactionDialog({
@@ -55,6 +54,7 @@ export function NewTransactionDialog({
   onOpenChange,
   selectedCategory,
   selectedBudget,
+  onSuccess,
 }: NewTransactionDialogProps) {
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -75,8 +75,10 @@ export function NewTransactionDialog({
   const remainingBalance = useMemo(() => {
     if (!selectedCategory) return 0;
     const allocationAmount = parseFloat(selectedCategory.allocationAmount) || 0;
-    const spent = parseFloat(spentAmount) || 0;
-    return allocationAmount - spent;
+    const existingSpent = parseFloat(selectedCategory.spentAmount || "0") || 0;
+    const newSpent = parseFloat(spentAmount) || 0;
+    const totalSpent = existingSpent + newSpent;
+    return allocationAmount - totalSpent;
   }, [selectedCategory, spentAmount]);
 
   // Format currency
@@ -99,23 +101,73 @@ export function NewTransactionDialog({
 
   const onSubmit = async (values: TransactionFormValues) => {
     const relativeDates = ["Yesterday", "Today", "Tomorrow"];
-    try {
-      // TODO: Implement transaction creation API call
-      console.log("Transaction data:", {
-        spentAmount: parseFloat(values.spentAmount),
-        notes: values.notes,
-        date:
-          values.date && relativeDates.includes(values.date)
-            ? formatDate(parseDate(values.date) as Date)
-            : values.date,
-        categoryId: selectedCategory?.id,
-        budgetId: selectedBudget?.id,
-        type: selectedCategory?.allocationType,
+
+    if (!selectedBudget || !selectedCategory) {
+      form.setError("root", {
+        message: "Please select a budget and category",
       });
+      return;
+    }
+
+    try {
+      // Parse the date - handle relative dates like "Today", "Yesterday", "Tomorrow"
+      let transactionDate: Date;
+      if (values.date && relativeDates.includes(values.date)) {
+        const parsed = parseDate(values.date);
+        if (!parsed) {
+          throw new Error("Invalid date");
+        }
+        transactionDate = parsed as Date;
+      } else if (values.date) {
+        // Try to parse the formatted date string
+        const parsed = parseDate(values.date);
+        if (!parsed) {
+          throw new Error("Invalid date format");
+        }
+        transactionDate = parsed as Date;
+      } else {
+        transactionDate = new Date();
+      }
+
+      // Prepare the request body
+      const requestBody = {
+        amount: parseFloat(values.spentAmount),
+        description: values.notes || undefined,
+        type: selectedCategory.allocationType,
+        categoryId: selectedCategory.category.id, // Use the actual category ID, not budget category ID
+        budgetspaceId: selectedBudget.budgetspaceId,
+        budgetId: selectedBudget.id, // Include budget ID for validation
+        date: transactionDate.toISOString(), // Convert to ISO string
+      };
+
+      // Call the API
+      const response = await fetch("/api/transactions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+            `Failed to create transaction: ${response.statusText}`
+        );
+      }
 
       // Reset form and close dialog on success
       form.reset();
       handleOpenChange(false);
+
+      // Refresh data if callback provided
+      if (onSuccess) {
+        await onSuccess();
+      }
+
+      // Show success notification after dialog closes
+      toast.success("Transaction created successfully");
     } catch (error) {
       form.setError("root", {
         message:

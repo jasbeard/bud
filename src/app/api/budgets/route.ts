@@ -6,8 +6,9 @@ import {
   budgetspaces,
   budgetCategories,
   categories,
+  transactions,
 } from "@/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
 
@@ -271,6 +272,47 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Calculate spent amounts from transactions for each category
+    const categoryIds = Array.from(budgetCategoriesMap.values())
+      .flat()
+      .map((bc) => bc.categoryId);
+    const spentAmountsMap = new Map<string, string>();
+
+    if (categoryIds.length > 0) {
+      // Build base conditions for transaction query
+      const transactionConditions = [
+        isNotNull(transactions.categoryId),
+        inArray(transactions.categoryId, categoryIds),
+        eq(transactions.budgetspaceId, targetBudgetspaceId),
+      ];
+
+      // Get spent amounts per category, grouped by categoryId and type
+      const spentAmounts = await db
+        .select({
+          categoryId: transactions.categoryId,
+          type: transactions.type,
+          totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+        })
+        .from(transactions)
+        .where(and(...transactionConditions))
+        .groupBy(transactions.categoryId, transactions.type);
+
+      // Create a map: categoryId -> spent amount (only for matching types)
+      for (const spent of spentAmounts) {
+        if (spent.categoryId) {
+          // Find the budget category to match the type
+          const allCategories = Array.from(budgetCategoriesMap.values()).flat();
+          const budgetCat = allCategories.find(
+            (bc) => bc.categoryId === spent.categoryId
+          );
+          // Only count if transaction type matches category allocation type
+          if (budgetCat && budgetCat.allocationType === spent.type) {
+            spentAmountsMap.set(spent.categoryId, spent.totalSpent);
+          }
+        }
+      }
+    }
+
     // Attach budget categories to each budget and calculate totalAmount
     const budgetsWithCategories = userBudgets.map((budget) => {
       const categories = budgetCategoriesMap.get(budget.id) || [];
@@ -279,10 +321,19 @@ export async function GET(request: NextRequest) {
         return sum + parseFloat(cat.allocationAmount || "0");
       }, 0);
 
+      // Add spentAmount to each category
+      const categoriesWithSpent = categories.map((cat) => {
+        const spentAmount = spentAmountsMap.get(cat.categoryId) || "0";
+        return {
+          ...cat,
+          spentAmount,
+        };
+      });
+
       return {
         ...budget,
         totalAmount: calculatedTotal.toString(),
-        budgetCategories: categories,
+        budgetCategories: categoriesWithSpent,
       };
     });
 

@@ -6,8 +6,9 @@ import {
   categories,
   budgetspaces,
   budgets,
+  transactions,
 } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray, isNotNull } from "drizzle-orm";
 import { z } from "zod";
 import { auth } from "@/db/auth";
 
@@ -299,7 +300,66 @@ export async function GET(request: NextRequest) {
       .where(whereCondition)
       .orderBy(categories.name);
 
-    return NextResponse.json(budgetCategoriesList);
+    // Calculate spent amounts from transactions for each category
+    const categoryIds = budgetCategoriesList.map((bc) => bc.categoryId);
+    const spentAmountsMap = new Map<string, string>();
+
+    if (categoryIds.length > 0) {
+      // Build base conditions for transaction query
+      const transactionConditions = [
+        isNotNull(transactions.categoryId),
+        inArray(transactions.categoryId, categoryIds),
+      ];
+
+      // If we're filtering by a specific budget, also filter transactions by budgetId
+      if (budgetIdParam) {
+        transactionConditions.push(
+          isNotNull(transactions.budgetId),
+          eq(transactions.budgetId, budgetIdParam)
+        );
+      } else if (budgetspaceIdParam) {
+        // If filtering by budgetspace, ensure transactions belong to that budgetspace
+        transactionConditions.push(
+          eq(transactions.budgetspaceId, budgetspaceIdParam)
+        );
+      }
+
+      // Get spent amounts per category, grouped by categoryId and type
+      const spentAmounts = await db
+        .select({
+          categoryId: transactions.categoryId,
+          type: transactions.type,
+          totalSpent: sql<string>`COALESCE(SUM(${transactions.amount}), 0)`,
+        })
+        .from(transactions)
+        .where(and(...transactionConditions))
+        .groupBy(transactions.categoryId, transactions.type);
+
+      // Create a map: categoryId -> spent amount (only for matching types)
+      for (const spent of spentAmounts) {
+        if (spent.categoryId) {
+          // Find the budget category to match the type
+          const budgetCat = budgetCategoriesList.find(
+            (bc) => bc.categoryId === spent.categoryId
+          );
+          // Only count if transaction type matches category allocation type
+          if (budgetCat && budgetCat.allocationType === spent.type) {
+            spentAmountsMap.set(spent.categoryId, spent.totalSpent);
+          }
+        }
+      }
+    }
+
+    // Add spent amounts to each budget category
+    const budgetCategoriesWithSpent = budgetCategoriesList.map((bc) => {
+      const spentAmount = spentAmountsMap.get(bc.categoryId) || "0";
+      return {
+        ...bc,
+        spentAmount,
+      };
+    });
+
+    return NextResponse.json(budgetCategoriesWithSpent);
   } catch (error) {
     console.error("Error fetching budget categories:", error);
     return NextResponse.json(

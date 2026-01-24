@@ -1,10 +1,15 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Budget } from "@/contexts/budget-context";
-import { BudgetCategoryResponse } from "@/hooks/use-budget-categories";
+import { Budget, useBudgets } from "@/contexts/budget-context";
+import {
+  BudgetCategoryResponse,
+  useBudgetCategories,
+} from "@/hooks/use-budget-categories";
 import { NewTransactionDialog } from "./new-transaction-dialog";
 
 export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
+  const { mutate: mutateBudgets } = useBudgets();
+  const { mutateBudgetCategories } = useBudgetCategories();
   const [selectedCategory, setSelectedCategory] =
     useState<BudgetCategoryResponse | null>(null);
   const [selectedBudget, setSelectedBudget] = useState<Budget | null>(null);
@@ -54,9 +59,14 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
         }, 0);
         const totalAllocated = totalExpenseAllocated + totalIncomeAllocated;
 
-        // For now, remaining = allocated (since no transactions exist yet)
-        // Later, this will be: remaining = allocated - spent
-        const totalRemaining = totalAllocated;
+        // Calculate total spent from all categories
+        const totalSpent = allCategories.reduce((sum, cat) => {
+          const spent = parseFloat(cat.spentAmount || "0") || 0;
+          return sum + spent;
+        }, 0);
+
+        // Calculate remaining: allocated - spent
+        const totalRemaining = totalAllocated - totalSpent;
 
         return (
           <Card key={budget.id} className="md:min-h-[120px] border rounded">
@@ -86,8 +96,10 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
                   {allCategories.map((category) => {
                     const allocationAmount =
                       parseFloat(category.allocationAmount) || 0;
-                    // For now, remaining = allocated (no transactions yet)
-                    const remaining = allocationAmount;
+                    const spentAmount =
+                      parseFloat(category.spentAmount || "0") || 0;
+                    // Calculate remaining: allocated - spent
+                    const remaining = allocationAmount - spentAmount;
 
                     return (
                       <button
@@ -156,6 +168,12 @@ export function RemainingBudgetsView({ budgets }: { budgets: Budget[] }) {
         }}
         selectedCategory={selectedCategory}
         selectedBudget={selectedBudget}
+        onSuccess={async () => {
+          // Refresh budget categories to update spent amounts
+          await mutateBudgetCategories();
+          // Refresh budgets to update included categories with new spent amounts
+          await mutateBudgets();
+        }}
       />
     </div>
   );

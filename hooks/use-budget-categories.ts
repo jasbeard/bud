@@ -26,6 +26,7 @@ interface BudgetCategoryResponse {
   name: string;
   allocationAmount: string;
   allocationType: CategoryType;
+  spentAmount?: string; // Total spent amount from transactions
   createdAt: Date;
   updatedAt: Date | null;
   category: {
