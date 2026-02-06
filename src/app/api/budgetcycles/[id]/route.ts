@@ -23,9 +23,10 @@ const updateBudgetCycleSchema = z.object({
 // GET /api/budgetcycles/[id] - Get a specific budgetcycle
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Get authenticated user from session
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -54,7 +55,7 @@ export async function GET(
       .from(budgetCycles)
       .leftJoin(budgetspaces, eq(budgetCycles.budgetspaceId, budgetspaces.id))
       .where(
-        and(eq(budgetCycles.id, params.id), eq(budgetCycles.userId, userId))
+        and(eq(budgetCycles.id, id), eq(budgetCycles.userId, userId))
       )
       .limit(1);
 
@@ -70,7 +71,7 @@ export async function GET(
     const dates = await db
       .select()
       .from(budgetCycleTimelines)
-      .where(eq(budgetCycleTimelines.budgetCycleId, params.id));
+      .where(eq(budgetCycleTimelines.budgetCycleId, id));
 
     return NextResponse.json({
       ...budgetcycle[0],
@@ -88,9 +89,10 @@ export async function GET(
 // PUT /api/budgetcycles/[id] - Update a budgetcycle
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Get authenticated user from session
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -110,7 +112,7 @@ export async function PUT(
       .select()
       .from(budgetCycles)
       .where(
-        and(eq(budgetCycles.id, params.id), eq(budgetCycles.userId, userId))
+        and(eq(budgetCycles.id, id), eq(budgetCycles.userId, userId))
       )
       .limit(1);
 
@@ -128,7 +130,7 @@ export async function PUT(
         ...validatedData,
         updatedAt: new Date(),
       })
-      .where(eq(budgetCycles.id, params.id))
+      .where(eq(budgetCycles.id, id))
       .returning();
 
     // If dates are provided, update the timeline entries
@@ -137,12 +139,12 @@ export async function PUT(
       // Delete existing dates
       await db
         .delete(budgetCycleTimelines)
-        .where(eq(budgetCycleTimelines.budgetCycleId, params.id));
+        .where(eq(budgetCycleTimelines.budgetCycleId, id));
 
       // Insert new dates if provided
       if (validatedData.dates.length > 0) {
         const dateEntries = validatedData.dates.map((date, index) => ({
-          budgetCycleId: params.id,
+          budgetCycleId: id,
           userId,
           startDate: date.startDate,
           endDate: date.endDate,
@@ -172,9 +174,10 @@ export async function PUT(
 // DELETE /api/budgetcycles/[id] - Delete a budgetcycle
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     // Get authenticated user from session
     const session = await auth.api.getSession({
       headers: await headers(),
@@ -191,7 +194,7 @@ export async function DELETE(
       .select()
       .from(budgetCycles)
       .where(
-        and(eq(budgetCycles.id, params.id), eq(budgetCycles.userId, userId))
+        and(eq(budgetCycles.id, id), eq(budgetCycles.userId, userId))
       )
       .limit(1);
 
@@ -203,7 +206,7 @@ export async function DELETE(
     }
 
     // Delete the budgetcycle (cascade will handle related dates)
-    await db.delete(budgetCycles).where(eq(budgetCycles.id, params.id));
+    await db.delete(budgetCycles).where(eq(budgetCycles.id, id));
 
     return NextResponse.json({ message: "Budgetcycle deleted successfully" });
   } catch (error) {

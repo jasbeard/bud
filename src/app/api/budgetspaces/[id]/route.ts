@@ -12,13 +12,14 @@ const updateBudgetspaceSchema = z.object({
 // GET /api/budgetspaces/[id] - Get a specific budgetspace
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const budgetspace = await db
       .select()
       .from(budgetspaces)
-      .where(eq(budgetspaces.id, params.id))
+      .where(eq(budgetspaces.id, id))
       .limit(1);
 
     if (budgetspace.length === 0) {
@@ -41,9 +42,10 @@ export async function GET(
 // PUT /api/budgetspaces/[id] - Update a budgetspace
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const validatedData = updateBudgetspaceSchema.parse(body);
 
@@ -53,7 +55,7 @@ export async function PUT(
         ...validatedData,
         updatedAt: new Date(),
       })
-      .where(eq(budgetspaces.id, params.id))
+      .where(eq(budgetspaces.id, id))
       .returning();
 
     if (updatedBudgetspace.length === 0) {
@@ -82,12 +84,13 @@ export async function PUT(
 // DELETE /api/budgetspaces/[id] - Delete a budgetspace
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const deletedBudgetspace = await db
       .delete(budgetspaces)
-      .where(eq(budgetspaces.id, params.id))
+      .where(eq(budgetspaces.id, id))
       .returning();
 
     if (deletedBudgetspace.length === 0) {
