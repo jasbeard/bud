@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { PageHeader } from "@/components/page-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -36,7 +37,9 @@ export function WithSideBarLayout({ children }: { children: React.ReactNode }) {
           </div>
         </div> */}
         {children}
-        <PageOnboarding />
+        <Suspense fallback={null}>
+          <PageOnboarding />
+        </Suspense>
       </SidebarInset>
     </SidebarProvider>
   );

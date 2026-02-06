@@ -19,6 +19,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { authClient } from "@/db/auth-client";
+import { Suspense } from "react";
 
 import { CyclePreset, presetToDateRanges } from "@/lib/utils";
 import { BudgetCycleStep } from "@/components/onboarding/budget-cycle-step";
@@ -91,7 +92,7 @@ const getStepNameFromIndex = (index: number): string | null => {
   return onboardingSteps[index]?.id ?? null;
 };
 
-export default function Page() {
+function OnboardingPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -520,5 +521,29 @@ export default function Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col h-screen bg-background">
+        <div className="border-b bg-muted/30 px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex items-center justify-between max-w-4xl mx-auto gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold">Budget Setup</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                Get started with bud by completing these essential steps.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <OnboardingPageContent />
+    </Suspense>
   );
 }
