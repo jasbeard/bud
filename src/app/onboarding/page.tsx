@@ -34,14 +34,14 @@ const formSchema = z.object({
     .max(50, "Budgetspace name must be less than 50 characters")
     .regex(
       /^[a-zA-Z0-9\s\-_]+$/,
-      "Only letters, numbers, spaces, hyphens, and underscores are allowed"
+      "Only letters, numbers, spaces, hyphens, and underscores are allowed",
     ),
   cycles: z
     .array(
       z.object({
         from: z.date(),
         to: z.date().optional(),
-      })
+      }),
     )
     .min(1, "At least one budget cycle is required")
     .optional(),
@@ -49,7 +49,6 @@ const formSchema = z.object({
   cycleType: z.enum(["monthly", "custom"]),
   categories: z
     .array(z.string().min(1, "Category name cannot be empty"))
-    .min(1, "At least one category is required")
     .optional(),
 });
 
@@ -69,8 +68,9 @@ const onboardingSteps = [
   },
   {
     id: "categories",
-    title: "Set Up Categories",
-    description: "Create spending categories for better organization",
+    title: "Set Up Initial Categories",
+    description:
+      "Just some quick categories to get started—customize more later.",
   },
 ];
 
@@ -148,7 +148,7 @@ function OnboardingPageContent() {
         : pathname;
       router.replace(newUrl, { scroll: false });
     },
-    [router, pathname, searchParams]
+    [router, pathname, searchParams],
   );
 
   // Initialize with Monthly preset on mount
@@ -156,7 +156,7 @@ function OnboardingPageContent() {
     if (selectedPreset?.type === "monthly") {
       const dateRanges = presetToDateRanges(selectedPreset, defaultMonth);
       const validRanges = dateRanges.filter(
-        (r): r is { from: Date; to?: Date } => !!r.from
+        (r): r is { from: Date; to?: Date } => !!r.from,
       );
       form.setValue("cycles", validRanges);
       form.setValue("cycleType", "monthly");
@@ -247,8 +247,8 @@ function OnboardingPageContent() {
         currentStep === 0
           ? ["budgetspace" as const]
           : currentStep === 1
-          ? ["cycles" as const]
-          : ["categories" as const];
+            ? ["cycles" as const]
+            : ["categories" as const];
       const isValid = await form.trigger(fieldsToValidate);
 
       if (isValid) {
@@ -263,8 +263,15 @@ function OnboardingPageContent() {
   };
 
   const handleCompleteOnboarding = async () => {
-    const isValid = await form.trigger();
-    if (!isValid) return;
+    // Only validate fields needed for completion - full form validation can fail when
+    // user skipped to step 2 with existing data (cycles may be empty)
+    const isValid = await form.trigger(["budgetspace", "categories"]);
+    if (!isValid) {
+      const errors = form.formState.errors;
+      const firstError = errors.budgetspace?.message || errors.categories?.message;
+      if (firstError) setError(firstError as string);
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -287,13 +294,13 @@ function OnboardingPageContent() {
       if (defaultCategoriesResponse.ok) {
         const defaultCategoriesData = await defaultCategoriesResponse.json();
         defaultCategoryNames = defaultCategoriesData.map(
-          (cat: { name: string }) => cat.name
+          (cat: { name: string }) => cat.name,
         );
       }
 
       const formCategories = formData.categories || [];
       const newCategories = formCategories.filter(
-        (category) => !defaultCategoryNames.includes(category)
+        (category) => !defaultCategoryNames.includes(category),
       );
 
       // Ensure cycles.type is always a valid preset name
@@ -337,13 +344,13 @@ function OnboardingPageContent() {
       } else {
         throw new Error(
           result.error ||
-            "Onboarding completed but returned unsuccessful status"
+            "Onboarding completed but returned unsuccessful status",
         );
       }
     } catch (err) {
       console.error("Error completing onboarding:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to complete onboarding"
+        err instanceof Error ? err.message : "Failed to complete onboarding",
       );
     } finally {
       setIsLoading(false);
@@ -503,6 +510,7 @@ function OnboardingPageContent() {
               )}
 
               <Button
+                type="button"
                 onClick={handleNext}
                 className="flex items-center gap-2 cursor-pointer"
                 disabled={isLoading || isCheckingExisting}
@@ -510,10 +518,10 @@ function OnboardingPageContent() {
                 {isCheckingExisting
                   ? "Loading..."
                   : isLoading
-                  ? "Completing Setup..."
-                  : currentStep === onboardingSteps.length - 1
-                  ? "Complete Setup"
-                  : "Next Step"}
+                    ? "Completing Setup..."
+                    : currentStep === onboardingSteps.length - 1
+                      ? "Complete Setup"
+                      : "Next Step"}
                 {!isLoading && <MoveRight className="h-4 w-4" />}
               </Button>
             </div>
@@ -526,23 +534,25 @@ function OnboardingPageContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={
-      <div className="flex flex-col h-screen bg-background">
-        <div className="border-b bg-muted/30 px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between max-w-4xl mx-auto gap-4">
-            <div className="min-w-0 flex-1">
-              <h1 className="text-xl sm:text-2xl font-bold">Budget Setup</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Get started with bud by completing these essential steps.
-              </p>
+    <Suspense
+      fallback={
+        <div className="flex flex-col h-screen bg-background">
+          <div className="border-b bg-muted/30 px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between max-w-4xl mx-auto gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold">Budget Setup</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  Get started with bud by completing these essential steps.
+                </p>
+              </div>
             </div>
           </div>
+          <div className="flex-1 flex items-center justify-center">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
         </div>
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    }>
+      }
+    >
       <OnboardingPageContent />
     </Suspense>
   );

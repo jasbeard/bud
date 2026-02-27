@@ -62,10 +62,26 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // 6. Redirect authenticated users away from login/signup pages to /budget
-  // Allow authenticated users to access landing (/), pricing, and other public pages
+  // 6. Redirect authenticated users away from login/signup pages
+  // Check onboarding status: new users → /onboarding, onboarded users → /budget
   if (sessionCookie && (path === AppPages.LOGIN || path === AppPages.SIGNUP)) {
-    return NextResponse.redirect(new URL(AppPages.BUDGET, req.nextUrl));
+    try {
+      const apiUrl = new URL("/api/user", req.nextUrl.origin);
+      const headers = new Headers();
+      req.headers.forEach((value, key) => {
+        headers.set(key, value);
+      });
+      const response = await fetch(apiUrl.toString(), { headers });
+      if (response.ok) {
+        const { isOnboarded } = await response.json();
+        const redirectTo = isOnboarded ? AppPages.BUDGET : AppPages.ONBOARDING;
+        return NextResponse.redirect(new URL(redirectTo, req.nextUrl));
+      }
+    } catch (error) {
+      console.error("Error checking onboarding status for login/signup redirect:", error);
+    }
+    // Fallback: redirect to onboarding if we can't check (safer for new users)
+    return NextResponse.redirect(new URL(AppPages.ONBOARDING, req.nextUrl));
   }
 
   return NextResponse.next();

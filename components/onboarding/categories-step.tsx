@@ -59,7 +59,7 @@ export function CategoriesStep({
 
   const handleRemoveCategory = (categoryToRemove: string) => {
     const updatedCategories = categories.filter(
-      (cat) => cat !== categoryToRemove
+      (cat) => cat !== categoryToRemove,
     );
     form.setValue("categories", updatedCategories, { shouldValidate: true });
   };
@@ -67,9 +67,9 @@ export function CategoriesStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold">Set Up Categories</h2>
+        <h2 className="text-2xl font-semibold"></h2>
         <p className="text-muted-foreground">
-          Create spending categories to organize your transactions.
+          Create initial spending categories.
         </p>
       </div>
 

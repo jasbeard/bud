@@ -59,10 +59,18 @@ export function SignupForm({
           message: result.error.message || "Signup failed",
         });
       } else {
-        // Redirect to login page or show success message
-        router.push(
-          "/login?message=Account created successfully! You can now sign in."
-        );
+        // better-auth auto-signs in after signup - check onboarding and redirect accordingly
+        try {
+          const onboardingResponse = await fetch("/api/user");
+          if (onboardingResponse.ok) {
+            const { isOnboarded } = await onboardingResponse.json();
+            router.push(isOnboarded ? "/budget" : "/onboarding");
+          } else {
+            router.push("/onboarding");
+          }
+        } catch {
+          router.push("/onboarding");
+        }
       }
     } catch {
       form.setError("root", {
