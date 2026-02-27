@@ -1,2 +1,0 @@
-ALTER TABLE "budget_categories" ADD COLUMN "budget_id" uuid NOT NULL;--> statement-breakpoint
-ALTER TABLE "budget_categories" ADD CONSTRAINT "budget_categories_budget_id_budgets_id_fk" FOREIGN KEY ("budget_id") REFERENCES "public"."budgets"("id") ON DELETE cascade ON UPDATE no action;

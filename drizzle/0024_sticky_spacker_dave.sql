@@ -1,1 +1,0 @@
-ALTER TABLE "budget_cycles" ADD COLUMN "type" text NOT NULL;

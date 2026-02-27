@@ -1,1 +1,0 @@
-ALTER TABLE "budgets" DROP COLUMN "period";
